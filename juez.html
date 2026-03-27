@@ -3,24 +3,20 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>JUEZ PADEL PRO - V6</title>
+    <title>JUEZ PADEL PRO - V7</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
     <style>
         * { box-sizing: border-box; touch-action: manipulation; }
         body { font-family: sans-serif; background: #000; color: #fff; margin: 0; padding: 10px; text-align: center; }
         .encabezado { background: #222; padding: 10px; border-radius: 10px; margin-bottom: 10px; display: flex; flex-wrap: wrap; justify-content: center; gap: 5px; }
-        
-        /* Estilos corregidos para botones de configuración */
-        .config-regla { background: #333; color: #fff; border: 2px solid #555; padding: 8px; border-radius: 5px; font-size: 11px; font-weight: bold; cursor: pointer; transition: all 0.2s; }
+        .config-regla { background: #333; color: #fff; border: 2px solid #555; padding: 8px; border-radius: 5px; font-size: 11px; font-weight: bold; cursor: pointer; }
         .config-regla.activo { background: #ccff00; color: #000; border-color: #ccff00; }
         .config-regla.oro-activo { background: #ffcc00; color: #000; border-color: #ffcc00; }
-
         .zona-tiempos { display: flex; justify-content: space-around; background: #111; padding: 10px; border-radius: 10px; margin-bottom: 10px; border: 1px solid #333; }
         .timer-box { display: flex; flex-direction: column; align-items: center; gap: 5px; }
         .timer-val { font-family: monospace; font-size: 22px; color: #ccff00; font-weight: bold; }
         .btn-timer { font-size: 9px; padding: 5px; background: #444; color: white; border: none; border-radius: 3px; cursor: pointer; }
-        
         .tablero-juez { display: flex; flex-direction: column; gap: 10px; height: 50vh; }
         .equipo-juez { background: #111; border: 2px solid #333; border-radius: 15px; padding: 10px; flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: space-between; position: relative; }
         .color-picker { position: absolute; top: 10px; right: 10px; width: 25px; height: 25px; border-radius: 50%; border: 2px solid white; cursor: pointer; }
@@ -31,18 +27,13 @@
         .btn-punto { background: #c6a052; color: #000; }
         .btn-saque { background: #333; color: #ccff00; border: 1px solid #ccff00; }
         .btn-saque.activo { background: #ccff00; color: #000; }
-        
-        /* Aviso de cambio en Juez - Sigue tapando pero es interactivo */
-        .aviso-cambio { background: rgba(255, 204, 0, 0.95); color: #000; padding: 15px; font-weight: bold; border-radius: 10px; position: absolute; top: 10px; left: 10px; width: calc(100% - 20px); z-index: 100; display: none; cursor: pointer; border: 2px solid #fff; box-shadow: 0 5px 15px rgba(0,0,0,0.5); }
-        
-        /* Botón reiniciar todo */
-        .btn-reset-full { background: #800; color: white; border: 2px solid #f00; padding: 15px; border-radius: 10px; font-weight: bold; cursor: pointer; width: 100%; margin-top: 20px; font-size: 16px; text-transform: uppercase; box-shadow: 0 4px #400; transition: all 0.1s; }
-        .btn-reset-full:active { box-shadow: 0 1px #400; transform: translateY(3px); }
+        .aviso-cambio { background: rgba(255, 204, 0, 0.95); color: #000; padding: 15px; font-weight: bold; border-radius: 10px; position: absolute; top: 10px; left: 10px; width: calc(100% - 20px); z-index: 100; display: none; cursor: pointer; border: 2px solid #fff; }
+        .btn-reset-full { background: #800; color: white; border: 2px solid #f00; padding: 15px; border-radius: 10px; font-weight: bold; cursor: pointer; width: 100%; margin-top: 20px; font-size: 16px; text-transform: uppercase; }
     </style>
 </head>
 <body>
     <div id="cambio-lado" class="aviso-cambio" onclick="aceptarCambio()">
-        ⚠️ CAMBIO DE LADO (<span id="reloj-descanso">90</span>s) ⚠️<br><small>Tocar para ocultar</small>
+        <span id="msg-descanso">⚠️ CAMBIO DE LADO</span> (<span id="reloj-descanso">90</span>s) ⚠️<br><small>Tocar para ocultar</small>
     </div>
 
     <div class="encabezado">
@@ -98,7 +89,7 @@
 
     let pts = [0,0], historialSets = [[0,0,0], [0,0,0]], setActualIdx = 0, saqueEquipo = -1, modo = "NORMAL", limiteTB = 6, puntoOroActivo = false;
     let segPartido = 0, segPeloteo = 300, runPartido = false, runPeloteo = false, showPeloteo = true, stack = [];
-    let segDescanso = 90, runDescanso = false, cambioVisible = false;
+    let segDescanso = 0, runDescanso = false, cambioVisible = false;
 
     setInterval(() => {
         if(runPartido) segPartido++; 
@@ -119,7 +110,8 @@
         
         db.ref("marcador/tiempos").set({ 
             tPart: `${h}:${m}:${s}`, tPel: `${pm}:${ps}`, vPel: showPeloteo,
-            tDesc: segDescanso, vDesc: cambioVisible 
+            tDesc: segDescanso, vDesc: cambioVisible, 
+            tiebreak: (modo === "TIE-BREAK")
         });
     }, 1000);
 
@@ -144,26 +136,38 @@
     function ganarG(eq) {
         historialSets[eq][setActualIdx]++;
         let gA=historialSets[0][setActualIdx], gB=historialSets[1][setActualIdx];
+        let totalGames = gA + gB;
         
-        if((gA+gB) % 2 !== 0) {
-            cambioVisible = true;
-            segDescanso = 90;
-            runDescanso = true;
-            document.getElementById('cambio-lado').style.display = "block";
+        // REGLA 2: Solo cambio de lado sin descanso en el primer game
+        if(totalGames === 1 && setActualIdx === 0) {
+            dispararAviso("SOLO CAMBIO DE LADO", 5); 
+        } 
+        // REGLA 3: Si termina el set
+        else if((gA>=6||gB>=6) && Math.abs(gA-gB)>=2 || (modo === "TIE-BREAK")) {
+            let msg = (totalGames % 2 !== 0) ? "SET Y CAMBIO DE LADO" : "SET";
+            dispararAviso(msg, 120);
+            ganarS();
+        }
+        // Cambio de lado normal
+        else if(totalGames % 2 !== 0) {
+            dispararAviso("CAMBIO DE LADO", 90);
         }
 
         if(gA===limiteTB && gB===limiteTB) modo="TIE-BREAK";
-        else if((gA>=6||gB>=6) && Math.abs(gA-gB)>=2) ganarS();
         if(saqueEquipo!==-1) saqueEquipo=saqueEquipo===0?1:0;
     }
 
-    function ganarS() { if(setActualIdx<2){ setActualIdx++; modo="NORMAL"; pts=[0,0]; render(); } }
-
-    function aceptarCambio() {
-        cambioVisible = false;
-        document.getElementById('cambio-lado').style.display = "none";
-        render();
+    function dispararAviso(mensaje, segundos) {
+        cambioVisible = true;
+        segDescanso = segundos;
+        runDescanso = true;
+        document.getElementById('msg-descanso').innerText = mensaje;
+        document.getElementById('reloj-descanso').innerText = segundos;
+        document.getElementById('cambio-lado').style.display = "block";
     }
+
+    function ganarS() { if(setActualIdx<2){ setActualIdx++; modo="NORMAL"; pts=[0,0]; render(); } }
+    function aceptarCambio() { cambioVisible = false; document.getElementById('cambio-lado').style.display = "none"; render(); }
 
     function render() {
         let l=["0","15","30","40","Ad"];
@@ -171,8 +175,6 @@
         document.getElementById('pB').innerText=modo==="NORMAL"?l[pts[1]]:pts[1];
         document.getElementById('saqueA').classList.toggle('activo', saqueEquipo===0);
         document.getElementById('saqueB').classList.toggle('activo', saqueEquipo===1);
-        
-        // Actualizar estado visual botones config
         document.getElementById('btn-regla').innerText = "TB: " + limiteTB + "-" + limiteTB;
         document.getElementById('btn-regla').classList.toggle('activo', limiteTB === 5);
         document.getElementById('btn-oro').innerText = "ORO: " + (puntoOroActivo ? "SÍ" : "NO");
@@ -182,7 +184,8 @@
             n0: document.getElementById('nA').innerText, n1: document.getElementById('nB').innerText,
             h0: historialSets[0], h1: historialSets[1], p0: document.getElementById('pA').innerText, p1: document.getElementById('pB').innerText,
             s: saqueEquipo, oro: (puntoOroActivo && pts[0]===3 && pts[1]===3), 
-            c0: document.getElementById('colA').value, c1: document.getElementById('colB').value
+            c0: document.getElementById('colA').value, c1: document.getElementById('colB').value,
+            msg: document.getElementById('msg-descanso').innerText
         });
     }
 
@@ -191,7 +194,7 @@
     function definirSaque(eq) { saqueEquipo=eq; render(); }
     function togglePuntoOro() { puntoOroActivo=!puntoOroActivo; render(); }
     function cambiarReglaTB() { limiteTB=limiteTB===6?5:6; render(); }
-    function reiniciarTodo() { if(confirm("🚨 ¿ESTÁS SEGURO DE REINICIAR EL PARTIDO COMPLETO? 🚨\nSe borrarán nombres, sets y tiempos.")){ location.reload(); } }
+    function reiniciarTodo() { if(confirm("🚨 REINICIAR TODO?")){ location.reload(); } }
     render();
 </script>
 </body>
