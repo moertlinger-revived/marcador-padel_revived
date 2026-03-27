@@ -2,53 +2,53 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>TV DISPLAY - V19 FINAL</title>
+    <title>TV DISPLAY - V20 FINAL</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
     <style>
         body { margin: 0; background: #000; font-family: 'Segoe UI', sans-serif; color: #fff; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; overflow: hidden; }
         
+        /* Contenedor Superior: Ancho exacto del tablero */
         .header-status { 
             width: 950px; 
             display: flex; 
             align-items: flex-end; 
-            justify-content: space-between; 
             height: 70px; 
-            margin-bottom: 5px; 
-            position: relative;
+            margin-bottom: 5px;
+            gap: 10px; /* Espaciado uniforme entre bloques */
         }
 
-        .grupo-izquierda {
-            display: flex;
-            align-items: flex-end;
-            gap: 10px;
-            flex-grow: 1;
-        }
-
+        /* 1. RELOJ (150px) */
         .timer-tv { 
-            background: #111; padding: 5px 15px; border-radius: 6px; border: 1px solid #333; 
-            text-align: center; width: 150px; flex-shrink: 0;
+            background: #111; padding: 5px 10px; border-radius: 6px; border: 1px solid #333; 
+            text-align: center; width: 150px; flex-shrink: 0; box-sizing: border-box;
         }
         .t-lab { font-size: 9px; color: #aaa; text-transform: uppercase; font-weight: bold; display: block; }
         .t-val { font-size: 24px; color: #ccff00; font-family: monospace; font-weight: bold; }
 
-        /* AVISO CAMBIO DE LADO: Ajustado para terminar exactamente con el Set 3 */
+        /* 2. CAMBIO DE LADO (Cálculo automático para no empujar nada)
+           950 total - 150 reloj - 160 tiebreak - 20 de gaps = 620px */
         #aviso-tv-top { 
             background: #ffcc00; color: #000; border-radius: 6px; 
             display: none; align-items: center; justify-content: center; 
-            gap: 20px; height: 52px; border: 2px solid #fff;
-            width: 630px; /* Ancho ajustado para terminar con la columna del set 3 */
+            gap: 15px; height: 52px; border: 2px solid #fff;
+            width: 600px; /* Ancho exacto para cubrir hasta el fin del Set 3 */
+            flex-shrink: 0;
+            box-sizing: border-box;
         }
-        .msg-top { font-size: 18px; font-weight: 900; text-transform: uppercase; }
-        .desc-top { font-size: 32px; font-family: monospace; font-weight: 900; }
+        .msg-top { font-size: 16px; font-weight: 900; text-transform: uppercase; white-space: nowrap; }
+        .desc-top { font-size: 30px; font-family: monospace; font-weight: 900; }
 
+        /* 3. TIE-BREAK (160px - Alineado con columna PUNTOS) */
         #aviso-tiebreak { 
             width: 160px; background: #d32f2f; border-radius: 6px; border: 1px solid #f00; 
             text-align: center; display: none; height: 52px; align-items: center; justify-content: center;
-            flex-shrink: 0;
+            flex-shrink: 0; box-sizing: border-box;
+            margin-left: auto; /* Se empuja al final derecho */
         }
         .tb-txt { font-size: 16px; font-weight: 900; color: #fff; text-transform: uppercase; }
 
+        /* TABLERO MARCADOR */
         #scoreboard { width: 950px; background: #0a0a20; border: 3px solid #333; }
         .labels-row { display: flex; background: rgba(255,255,255,0.05); font-size: 14px; color: #aaa; font-weight: bold; border-bottom: 2px solid #333; }
         .label-equipo { flex-grow: 1; padding: 10px 25px; }
@@ -65,23 +65,22 @@
         .pts-cell { width: 160px; display: flex; justify-content: center; align-items: center; font-size: 100px; font-weight: 900; background: #c6a052; color: #000; border-left: 2px solid #333; }
         
         .bola { width: 20px; height: 20px; background: #ccff00; border-radius: 50%; margin-left: 15px; display: none; box-shadow: 0 0 15px #ccff00; }
-        
         .oro-anim { animation: flash-gold 0.8s infinite alternate; }
         @keyframes flash-gold { from { background: #c6a052; } to { background: #fff; } }
     </style>
 </head>
 <body>
     <div class="header-status">
-        <div class="grupo-izquierda">
-            <div class="timer-tv">
-                <span id="label-timer" class="t-lab">PELOTEO</span>
-                <span id="val-timer" class="t-val">05:00</span>
-            </div>
-            <div id="aviso-tv-top">
-                <span class="msg-top" id="msg-tv-desc">CAMBIO DE LADO</span>
-                <span class="desc-top" id="descanso-tv-q">90</span>
-            </div>
+        <div class="timer-tv">
+            <span id="label-timer" class="t-lab">PELOTEO</span>
+            <span id="val-timer" class="t-val">05:00</span>
         </div>
+
+        <div id="aviso-tv-top">
+            <span class="msg-top" id="msg-tv-desc">CAMBIO DE LADO</span>
+            <span class="desc-top" id="descanso-tv-q">90</span>
+        </div>
+
         <div id="aviso-tiebreak">
             <span class="tb-txt">TIE-BREAK</span>
         </div>
@@ -119,13 +118,9 @@
 
     db.ref("marcador/tiempos").on("value", (snap) => {
         const t = snap.val(); if(!t) return;
-        if(t.vPel) { 
-            document.getElementById('label-timer').innerText = "PELOTEO"; 
-            document.getElementById('val-timer').innerText = t.tPel; 
-        } else { 
-            document.getElementById('label-timer').innerText = "TIEMPO PARTIDO"; 
-            document.getElementById('val-timer').innerText = t.tPar; 
-        }
+        document.getElementById('label-timer').innerText = t.vPel ? "PELOTEO" : "TIEMPO PARTIDO"; 
+        document.getElementById('val-timer').innerText = t.vPel ? t.tPel : t.tPar; 
+        
         const avisoTop = document.getElementById('aviso-tv-top');
         if(t.vDesc && t.tDesc > 0) {
             avisoTop.style.display = 'flex';
