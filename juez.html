@@ -3,19 +3,24 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>JUEZ PADEL PRO - V5</title>
+    <title>JUEZ PADEL PRO - V6</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
     <style>
         * { box-sizing: border-box; touch-action: manipulation; }
         body { font-family: sans-serif; background: #000; color: #fff; margin: 0; padding: 10px; text-align: center; }
         .encabezado { background: #222; padding: 10px; border-radius: 10px; margin-bottom: 10px; display: flex; flex-wrap: wrap; justify-content: center; gap: 5px; }
-        .config-regla { background: #333; color: #fff; border: 1px solid #c6a052; padding: 8px; border-radius: 5px; font-size: 11px; font-weight: bold; cursor: pointer; }
-        .config-regla.activo { background: #c6a052; color: #000; }
+        
+        /* Estilos corregidos para botones de configuración */
+        .config-regla { background: #333; color: #fff; border: 2px solid #555; padding: 8px; border-radius: 5px; font-size: 11px; font-weight: bold; cursor: pointer; transition: all 0.2s; }
+        .config-regla.activo { background: #ccff00; color: #000; border-color: #ccff00; }
+        .config-regla.oro-activo { background: #ffcc00; color: #000; border-color: #ffcc00; }
+
         .zona-tiempos { display: flex; justify-content: space-around; background: #111; padding: 10px; border-radius: 10px; margin-bottom: 10px; border: 1px solid #333; }
         .timer-box { display: flex; flex-direction: column; align-items: center; gap: 5px; }
         .timer-val { font-family: monospace; font-size: 22px; color: #ccff00; font-weight: bold; }
         .btn-timer { font-size: 9px; padding: 5px; background: #444; color: white; border: none; border-radius: 3px; cursor: pointer; }
+        
         .tablero-juez { display: flex; flex-direction: column; gap: 10px; height: 50vh; }
         .equipo-juez { background: #111; border: 2px solid #333; border-radius: 15px; padding: 10px; flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: space-between; position: relative; }
         .color-picker { position: absolute; top: 10px; right: 10px; width: 25px; height: 25px; border-radius: 50%; border: 2px solid white; cursor: pointer; }
@@ -26,14 +31,24 @@
         .btn-punto { background: #c6a052; color: #000; }
         .btn-saque { background: #333; color: #ccff00; border: 1px solid #ccff00; }
         .btn-saque.activo { background: #ccff00; color: #000; }
-        .aviso-cambio { background: #ffcc00; color: #000; padding: 12px; font-weight: bold; border-radius: 5px; margin-bottom: 10px; display: none; cursor: pointer; border: 2px solid #fff; }
+        
+        /* Aviso de cambio en Juez - Sigue tapando pero es interactivo */
+        .aviso-cambio { background: rgba(255, 204, 0, 0.95); color: #000; padding: 15px; font-weight: bold; border-radius: 10px; position: absolute; top: 10px; left: 10px; width: calc(100% - 20px); z-index: 100; display: none; cursor: pointer; border: 2px solid #fff; box-shadow: 0 5px 15px rgba(0,0,0,0.5); }
+        
+        /* Botón reiniciar todo */
+        .btn-reset-full { background: #800; color: white; border: 2px solid #f00; padding: 15px; border-radius: 10px; font-weight: bold; cursor: pointer; width: 100%; margin-top: 20px; font-size: 16px; text-transform: uppercase; box-shadow: 0 4px #400; transition: all 0.1s; }
+        .btn-reset-full:active { box-shadow: 0 1px #400; transform: translateY(3px); }
     </style>
 </head>
 <body>
+    <div id="cambio-lado" class="aviso-cambio" onclick="aceptarCambio()">
+        ⚠️ CAMBIO DE LADO (<span id="reloj-descanso">90</span>s) ⚠️<br><small>Tocar para ocultar</small>
+    </div>
+
     <div class="encabezado">
         <button class="config-regla" onclick="cambiarReglaTB()" id="btn-regla">TB: 6-6</button>
         <button class="config-regla" onclick="togglePuntoOro()" id="btn-oro">ORO: NO</button>
-        <button class="config-regla" style="background:#555" onclick="deshacer()">↩ CORREGIR</button>
+        <button class="config-regla" style="background:#555; border-color: #fff;" onclick="deshacer()">↩ CORREGIR</button>
     </div>
 
     <div class="zona-tiempos">
@@ -52,10 +67,6 @@
                 <button class="btn-timer" onclick="resetTimer('partido')">RESET</button>
             </div>
         </div>
-    </div>
-
-    <div id="cambio-lado" class="aviso-cambio" onclick="aceptarCambio()">
-        ⚠️ CAMBIO DE LADO (<span id="reloj-descanso">90</span>s) ⚠️<br><small>Tocar para ocultar</small>
     </div>
 
     <div class="tablero-juez">
@@ -79,6 +90,8 @@
         </div>
     </div>
 
+    <button class="btn-reset-full" onclick="reiniciarTodo()">🚨 REINICIAR TODO 🚨</button>
+
 <script>
     const firebaseConfig = { apiKey: "AIzaSyCQkDrlFCRKMYDxM54dkl24hGu-e-ZdbMs", databaseURL: "https://padel-vivo-default-rtdb.firebaseio.com", projectId: "padel-vivo" };
     firebase.initializeApp(firebaseConfig); const db = firebase.database();
@@ -93,7 +106,7 @@
         if(runDescanso && segDescanso > 0) {
             segDescanso--;
             document.getElementById('reloj-descanso').innerText = segDescanso;
-        } else if(segDescanso === 0) {
+        } else if(segDescanso === 0 && runDescanso) {
             runDescanso = false;
             cambioVisible = false;
             document.getElementById('cambio-lado').style.display = "none";
@@ -115,7 +128,7 @@
     function toggleVisibilidadPeloteo() { showPeloteo=!showPeloteo; render(); }
 
     function sumar(eq) {
-        stack.push(JSON.stringify({pts:[...pts], h:[[...historialSets[0]],[...historialSets[1]]], sIdx:setActualIdx, m:modo, sq:saqueEquipo}));
+        stack.push(JSON.stringify({pts:[...pts], h:[[...historialSets[0]],[...historialSets[1]]], sIdx:setActualIdx, m:modo, sq:saqueEquipo, tb: limiteTB, oro: puntoOroActivo}));
         if(!runPartido) runPartido = true;
         let ot=eq===0?1:0;
         if(modo==="NORMAL"){
@@ -144,7 +157,7 @@
         if(saqueEquipo!==-1) saqueEquipo=saqueEquipo===0?1:0;
     }
 
-    function ganarS() { if(setActualIdx<2){ setActualIdx++; modo="NORMAL"; } }
+    function ganarS() { if(setActualIdx<2){ setActualIdx++; modo="NORMAL"; pts=[0,0]; render(); } }
 
     function aceptarCambio() {
         cambioVisible = false;
@@ -159,6 +172,12 @@
         document.getElementById('saqueA').classList.toggle('activo', saqueEquipo===0);
         document.getElementById('saqueB').classList.toggle('activo', saqueEquipo===1);
         
+        // Actualizar estado visual botones config
+        document.getElementById('btn-regla').innerText = "TB: " + limiteTB + "-" + limiteTB;
+        document.getElementById('btn-regla').classList.toggle('activo', limiteTB === 5);
+        document.getElementById('btn-oro').innerText = "ORO: " + (puntoOroActivo ? "SÍ" : "NO");
+        document.getElementById('btn-oro').classList.toggle('oro-activo', puntoOroActivo);
+
         db.ref("marcador/actual").set({
             n0: document.getElementById('nA').innerText, n1: document.getElementById('nB').innerText,
             h0: historialSets[0], h1: historialSets[1], p0: document.getElementById('pA').innerText, p1: document.getElementById('pB').innerText,
@@ -167,11 +186,12 @@
         });
     }
 
-    function deshacer() { if(stack.length){ let e=JSON.parse(stack.pop()); pts=e.pts; historialSets=e.h; setActualIdx=e.sIdx; modo=e.m; saqueEquipo=e.sq; render(); } }
+    function deshacer() { if(stack.length){ let e=JSON.parse(stack.pop()); pts=e.pts; historialSets=e.h; setActualIdx=e.sIdx; modo=e.m; saqueEquipo=e.sq; limiteTB=e.tb; puntoOroActivo=e.oro; render(); } }
     function cambiarNombre(eq) { let n=prompt("Nombre:"); if(n) document.getElementById(eq===0?'nA':'nB').innerText=n.toUpperCase(); render(); }
     function definirSaque(eq) { saqueEquipo=eq; render(); }
     function togglePuntoOro() { puntoOroActivo=!puntoOroActivo; render(); }
-    function cambiarReglaTB() { limiteTB=limiteTB===6?5:6; document.getElementById('btn-regla').innerText="TB: "+limiteTB+"-"+limiteTB; }
+    function cambiarReglaTB() { limiteTB=limiteTB===6?5:6; render(); }
+    function reiniciarTodo() { if(confirm("🚨 ¿ESTÁS SEGURO DE REINICIAR EL PARTIDO COMPLETO? 🚨\nSe borrarán nombres, sets y tiempos.")){ location.reload(); } }
     render();
 </script>
 </body>
