@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Panel del Juez</title>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+    
+    <style>
+        /* Reutilizamos tu estilo anterior para que el juez se sienta cómodo */
+        * { box-sizing: border-box; touch-action: manipulation; }
+        body { font-family: sans-serif; background: #000; color: #fff; margin: 0; padding: 10px; text-align: center; }
+        .tablero { display: flex; gap: 8px; height: 60vh; margin-top: 10px; }
+        .equipo { flex: 1; background: #111; border: 2px solid #333; border-radius: 20px; padding: 15px 5px; display: flex; flex-direction: column; align-items: center; justify-content: space-between; }
+        .puntos-n { font-size: 80px; font-weight: 900; color: #ccff00; }
+        .btn-punto { width: 95%; padding: 20px 0; background: #ccff00; color: #000; border: none; border-radius: 15px; font-size: 20px; font-weight: bold; }
+        .config-regla { background: #222; padding: 10px; border: 1px solid #00d4ff; color: #00d4ff; margin-bottom: 10px; border-radius: 10px; font-size: 12px; }
+    </style>
+</head>
+<body>
+
+    <div class="config-regla" id="btn-regla" onclick="cambiarReglaTB()">TIE-BREAK: 6-6</div>
+
+    <div class="tablero">
+        <div class="equipo">
+            <div id="n0" onclick="cambiarNombre(0)" style="color:#00d4ff; font-weight:bold">EQUIPO A</div>
+            <div style="font-size:25px" id="s0">0</div>
+            <div id="g0" style="color:#aaa">GAMES: 0</div>
+            <div class="puntos-n" id="p0">0</div>
+            <button class="btn-punto" onclick="sumar(0)">PUNTO</button>
+        </div>
+        <div class="equipo">
+            <div id="n1" onclick="cambiarNombre(1)" id="n1" style="color:#00d4ff; font-weight:bold">EQUIPO B</div>
+            <div style="font-size:25px" id="s1">0</div>
+            <div id="g1" style="color:#aaa">GAMES: 0</div>
+            <div class="puntos-n" id="p1">0</div>
+            <button class="btn-punto" onclick="sumar(1)">PUNTO</button>
+        </div>
+    </div>
+
+    <button onclick="location.reload()" style="margin-top:20px; background:#400; color:white; border:none; padding:10px; border-radius:5px">REINICIAR TODO</button>
+
+<script>
+    // CONFIGURACIÓN DE FIREBASE (Copia esto de tu consola de Firebase)
+    const firebaseConfig = {
+        apiKey: "REEMPLAZAR_CON_TU_API_KEY",
+        databaseURL: "https://REEMPLAZAR_CON_URL_DATABASE.firebaseio.com",
+        projectId: "REEMPLAZAR_CON_TU_ID",
+    };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+
+    var pts = [0,0], gms = [0,0], sts = [0,0], modo = "NORMAL", limiteTB = 6;
+    var labels = ["0","15","30","40"];
+
+    function render() {
+        var p0_txt = (modo === "NORMAL") ? labels[pts[0]] : pts[0];
+        var p1_txt = (modo === "NORMAL") ? labels[pts[1]] : pts[1];
+        
+        document.getElementById('p0').innerHTML = p0_txt;
+        document.getElementById('p1').innerHTML = p1_txt;
+        document.getElementById('g0').innerHTML = "GAMES: " + gms[0];
+        document.getElementById('g1').innerHTML = "GAMES: " + gms[1];
+        document.getElementById('s0').innerHTML = sts[0];
+        document.getElementById('s1').innerHTML = sts[1];
+
+        // ENVIAR A LA WEB DE ESPECTADORES
+        db.ref("marcador/actual").set({
+            n0: document.getElementById('n0').innerHTML,
+            n1: document.getElementById('n1').innerHTML,
+            s0: sts[0], s1: sts[1],
+            g0: gms[0], g1: gms[1],
+            p0: p0_txt, p1: p1_txt,
+            m: modo
+        });
+    }
+
+    function sumar(eq) {
+        var ot = (eq === 0) ? 1 : 0;
+        if(modo === "NORMAL") {
+            if(pts[eq] === 3) { pts=[0,0]; gms[eq]++; validarSet(eq, ot); } 
+            else { pts[eq]++; }
+        } else {
+            pts[eq]++;
+            var meta = (modo === "TIE-BREAK") ? 7 : 11;
+            if(pts[eq] >= meta && (pts[eq]-pts[ot] >= 2)) { 
+                pts=[0,0]; gms=[0,0]; sts[eq]++; modo="NORMAL";
+            }
+        }
+        render();
+    }
+
+    function validarSet(eq, ot) {
+        if(gms[eq] === limiteTB && gms[ot] === limiteTB) modo = "TIE-BREAK";
+        else if(gms[eq] >= 6 && (gms[eq]-gms[ot] >= 2)) { gms=[0,0]; sts[eq]++; }
+    }
+
+    function cambiarNombre(eq) {
+        var n = prompt("Nombre:");
+        if(n) { document.getElementById('n'+eq).innerHTML = n.toUpperCase(); render(); }
+    }
+
+    function cambiarReglaTB() {
+        limiteTB = (limiteTB === 6) ? 5 : 6;
+        document.getElementById('btn-regla').innerHTML = "TIE-BREAK: " + limiteTB + "-" + limiteTB;
+    }
+
+    render();
+</script>
+</body>
+</html>
