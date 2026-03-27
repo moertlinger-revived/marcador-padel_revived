@@ -3,107 +3,214 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Panel del Juez</title>
+    <title>JUEZ PROFESIONAL (ESTILO FIP)</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
     
     <style>
-        /* Reutilizamos tu estilo anterior para que el juez se sienta cómodo */
         * { box-sizing: border-box; touch-action: manipulation; }
         body { font-family: sans-serif; background: #000; color: #fff; margin: 0; padding: 10px; text-align: center; }
-        .tablero { display: flex; gap: 8px; height: 60vh; margin-top: 10px; }
-        .equipo { flex: 1; background: #111; border: 2px solid #333; border-radius: 20px; padding: 15px 5px; display: flex; flex-direction: column; align-items: center; justify-content: space-between; }
-        .puntos-n { font-size: 80px; font-weight: 900; color: #ccff00; }
-        .btn-punto { width: 95%; padding: 20px 0; background: #ccff00; color: #000; border: none; border-radius: 15px; font-size: 20px; font-weight: bold; }
-        .config-regla { background: #222; padding: 10px; border: 1px solid #00d4ff; color: #00d4ff; margin-bottom: 10px; border-radius: 10px; font-size: 12px; }
+        
+        .encabezado { background: #222; padding: 10px; border-radius: 10px; margin-bottom: 10px; color: #fff; display: flex; justify-content: space-between; align-items: center; }
+        .config-regla { background: #333; color: #fff; border: 1px solid #c6a052; padding: 5px 10px; border-radius: 5px; font-size: 14px; }
+
+        .tablero-juez { display: flex; flex-direction: column; gap: 10px; height: 75vh; }
+        .equipo-juez { background: #111; border: 2px solid #333; border-radius: 15px; padding: 10px; flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: space-between; }
+        
+        .zona-sets { font-size: 18px; color: #888; }
+        .sets-linea { display: flex; gap: 10px; }
+        .set-num { background: #333; color: #fff; padding: 2px 8px; border-radius: 4px; }
+        
+        .nombre-eq { color: #fff; font-size: 20px; font-weight: bold; text-transform: uppercase; cursor: pointer; }
+        
+        .puntos-juez { font-size: 80px; font-weight: 900; color: #c6a052; /* Color oro */ }
+        
+        .zona-controles { width: 100%; display: flex; gap: 10px; justify-content: space-around; }
+        .btn-accion { flex: 1; padding: 15px; border: none; border-radius: 10px; font-size: 16px; font-weight: bold; cursor: pointer; }
+        .btn-punto { background: #c6a052; color: #000; }
+        .btn-saque { background: #333; color: #ccff00; /* Color bola amarillo flúor */ border: 1px solid #ccff00; }
+        .btn-saque.activo { background: #ccff00; color: #000; }
+
+        .btn-reiniciar { margin-top: 15px; background: #400; color: white; border: none; padding: 8px; border-radius: 5px; cursor: pointer; }
     </style>
 </head>
 <body>
 
-    <div class="config-regla" id="btn-regla" onclick="cambiarReglaTB()">TIE-BREAK: 6-6</div>
+    <div class="encabezado">
+        <button class="config-regla" id="btn-regla" onclick="cambiarReglaTB()">TIE-BREAK: 6-6</button>
+        <div>JUEZ EN VIVO</div>
+    </div>
 
-    <div class="tablero">
-        <div class="equipo">
-            <div id="n0" onclick="cambiarNombre(0)" style="color:#00d4ff; font-weight:bold">EQUIPO A</div>
-            <div style="font-size:25px" id="s0">0</div>
-            <div id="g0" style="color:#aaa">GAMES: 0</div>
-            <div class="puntos-n" id="p0">0</div>
-            <button class="btn-punto" onclick="sumar(0)">PUNTO</button>
+    <div class="tablero-juez">
+        <div class="equipo-juez">
+            <div class="zona-sets">Sets Anteriores: <span class="sets-linea" id="hA">0 0 0</span></div>
+            <div class="nombre-eq" onclick="cambiarNombre(0)" id="nA">EQUIPO A</div>
+            <div class="puntos-juez" id="pA">0</div>
+            
+            <div class="zona-controles">
+                <button class="btn-accion btn-punto" onclick="sumar(0)">+ PUNTO</button>
+                <button class="btn-accion btn-saque" id="saqueA" onclick="definirSaque(0)">SAQUE 🎾</button>
+            </div>
         </div>
-        <div class="equipo">
-            <div id="n1" onclick="cambiarNombre(1)" id="n1" style="color:#00d4ff; font-weight:bold">EQUIPO B</div>
-            <div style="font-size:25px" id="s1">0</div>
-            <div id="g1" style="color:#aaa">GAMES: 0</div>
-            <div class="puntos-n" id="p1">0</div>
-            <button class="btn-punto" onclick="sumar(1)">PUNTO</button>
+
+        <div class="equipo-juez">
+            <div class="zona-sets">Sets Anteriores: <span class="sets-linea" id="hB">0 0 0</span></div>
+            <div class="nombre-eq" onclick="cambiarNombre(1)" id="nB">EQUIPO B</div>
+            <div class="puntos-juez" id="pB">0</div>
+            
+            <div class="zona-controles">
+                <button class="btn-accion btn-punto" onclick="sumar(1)">+ PUNTO</button>
+                <button class="btn-accion btn-saque" id="saqueB" onclick="definirSaque(1)">SAQUE 🎾</button>
+            </div>
         </div>
     </div>
 
-    <button onclick="location.reload()" style="margin-top:20px; background:#400; color:white; border:none; padding:10px; border-radius:5px">REINICIAR TODO</button>
+    <button class="btn-reiniciar" onclick="reiniciarPartido()">REINICIAR TODO</button>
 
 <script>
-    // CONFIGURACIÓN DE FIREBASE (Copia esto de tu consola de Firebase)
+    // ⚠️ ATENCIÓN MATÍAS: REEMPLAZA ESTO CON TUS DATOS DE FIREBASE ⚠️
     const firebaseConfig = {
-        apiKey: "AIzaSyCQkDrlFCRKMYDxM54dkl24hGu-e-ZdbMs",
-        databaseURL: "https://padel-vivo-default-rtdb.firebaseio.com",
-        projectId: "padel-vivo",
+        apiKey: "PEGAS_AQUI_TU_API_KEY",
+        databaseURL: "https://TU-PROYECTO.firebaseio.com",
+        projectId: "TU-ID-DE-PROYECTO",
     };
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
 
-    var pts = [0,0], gms = [0,0], sts = [0,0], modo = "NORMAL", limiteTB = 6;
-    var labels = ["0","15","30","40"];
+    // Variables de Estado
+    var pts = [0,0]; // Puntos actuales (índice labels)
+    var historialSets = [[0,0,0], [0,0,0]]; // Historial de sets Equipo A y B
+    var setActualIdx = 0; // En qué set vamos (0, 1 o 2)
+    var saqueEquipo = -1; // Quién saca (0 o 1). -1 significa ninguno.
+    
+    var modo = "NORMAL";
+    var limiteTB = 6;
+    var labels = ["0","15","30","40","Ad"]; // Agregado Ventaja (Ad)
 
     function render() {
-        var p0_txt = (modo === "NORMAL") ? labels[pts[0]] : pts[0];
-        var p1_txt = (modo === "NORMAL") ? labels[pts[1]] : pts[1];
+        // Formatear puntos (NORMAL, TIE-BREAK, o VENTAJAS)
+        var pA_txt = "", pB_txt = "";
         
-        document.getElementById('p0').innerHTML = p0_txt;
-        document.getElementById('p1').innerHTML = p1_txt;
-        document.getElementById('g0').innerHTML = "GAMES: " + gms[0];
-        document.getElementById('g1').innerHTML = "GAMES: " + gms[1];
-        document.getElementById('s0').innerHTML = sts[0];
-        document.getElementById('s1').innerHTML = sts[1];
+        if(modo === "NORMAL") {
+            pA_txt = labels[pts[0]];
+            pB_txt = labels[pts[1]];
+            
+            // Lógica de Ventaja
+            if(pts[0] === 3 && pts[1] === 3) { pA_txt = "40"; pB_txt = "40"; } // Iguales (Deuce)
+            if(pts[0] === 4) { pA_txt = "Ad"; pB_txt = "40"; }
+            if(pts[1] === 4) { pA_txt = "40"; pB_txt = "Ad"; }
+        } else {
+            pA_txt = pts[0]; pB_txt = pts[1]; // Modo Tie-break o Punto de Oro numérico
+        }
+        
+        // Actualizar UI del Juez
+        document.getElementById('pA').innerHTML = pA_txt;
+        document.getElementById('pB').innerHTML = pB_txt;
+        
+        // Actualizar historial visual (usando clases para formato de casillero)
+        renderHistorial(0, 'hA');
+        renderHistorial(1, 'hB');
 
-        // ENVIAR A LA WEB DE ESPECTADORES
+        // Actualizar botones de saque
+        document.getElementById('saqueA').className = "btn-accion btn-saque" + (saqueEquipo === 0 ? " activo" : "");
+        document.getElementById('saqueB').className = "btn-accion btn-saque" + (saqueEquipo === 1 ? " activo" : "");
+
+        // ⚠️ ENVIAR A LA WEB DE ESPECTADORES ⚠️
         db.ref("marcador/actual").set({
-            n0: document.getElementById('n0').innerHTML,
-            n1: document.getElementById('n1').innerHTML,
-            s0: sts[0], s1: sts[1],
-            g0: gms[0], g1: gms[1],
-            p0: p0_txt, p1: p1_txt,
-            m: modo
+            n0: document.getElementById('nA').innerHTML,
+            n1: document.getElementById('nB').innerHTML,
+            h0: historialSets[0], // Array [6,2,0]
+            h1: historialSets[1], // Array [3,6,0]
+            p0: pA_txt,
+            p1: pB_txt,
+            s: saqueEquipo // Enviar 0 o 1
         });
+    }
+
+    function renderHistorial(eq, idHtml) {
+        var h = historialSets[eq];
+        var txt = "";
+        for(var i=0; i<3; i++) {
+            var clase = (i === setActualIdx) ? 'class="set-num actual"' : 'class="set-num"'; // Opcional: resaltar set actual
+            txt += '<span '+clase+'>' + h[i] + '</span> ';
+        }
+        document.getElementById(idHtml).innerHTML = txt;
     }
 
     function sumar(eq) {
         var ot = (eq === 0) ? 1 : 0;
+        
         if(modo === "NORMAL") {
-            if(pts[eq] === 3) { pts=[0,0]; gms[eq]++; validarSet(eq, ot); } 
-            else { pts[eq]++; }
+            // Lógica compleja de Puntos normal con Ventaja
+            if(pts[eq] < 3) { pts[eq]++; } 
+            else if (pts[eq] === 3 && pts[ot] < 3) { pts=[0,0]; ganarGame(eq, ot); } // Gana game directo desde 40
+            else if (pts[eq] === 3 && pts[ot] === 3) { pts[eq] = 4; pts[ot] = 3; } // Sube a Ventaja
+            else if (pts[eq] === 3 && pts[ot] === 4) { pts[eq] = 3; pts[ot] = 3; } // Iguala a Deuce (40-40)
+            else if (pts[eq] === 4 && pts[ot] === 3) { pts=[0,0]; ganarGame(eq, ot); } // Gana game desde Ventaja
+            
         } else {
+            // Modo Tie-break (sumar numérico 7)
             pts[eq]++;
-            var meta = (modo === "TIE-BREAK") ? 7 : 11;
-            if(pts[eq] >= meta && (pts[eq]-pts[ot] >= 2)) { 
-                pts=[0,0]; gms=[0,0]; sts[eq]++; modo="NORMAL";
+            var metaTB = 7;
+            if(pts[eq] >= metaTB && (pts[eq]-pts[ot] >= 2)) { 
+                pts=[0,0];
+                ganarGame(eq, ot); // El Tie-break es un game especial
+                ganarSet(eq, ot); // Y automáticamente cierra el set
             }
         }
         render();
     }
 
-    function validarSet(eq, ot) {
-        if(gms[eq] === limiteTB && gms[ot] === limiteTB) modo = "TIE-BREAK";
-        else if(gms[eq] >= 6 && (gms[eq]-gms[ot] >= 2)) { gms=[0,0]; sts[eq]++; }
+    function ganarGame(eq, ot) {
+        // En este diseño profesional, los "Games" se suman directo al set actual
+        historialSets[eq][setActualIdx]++;
+        
+        var gA = historialSets[0][setActualIdx];
+        var gB = historialSets[1][setActualIdx];
+
+        // Validar Tie-break o Cierre de set
+        if(gA === limiteTB && gB === limiteTB) {
+            modo = "TIE-BREAK";
+        } else if((gA >= 6 || gB >= 6) && Math.abs(gA - gB) >= 2) {
+            ganarSet(eq, ot);
+        }
+        
+        // Cambiar saque automáticamente al ganar game (opcional, pero profesional)
+        if(saqueEquipo !== -1) { saqueEquipo = (saqueEquipo === 0) ? 1 : 0; }
     }
 
+    function ganarSet(eq, ot) {
+        // Cierra el set actual e incrementa el índice
+        if(setActualIdx < 2) {
+            setActualIdx++;
+            modo = "NORMAL";
+            pts = [0,0];
+        } else {
+            // Partido terminado
+            alert("Partido finalizado");
+        }
+    }
+
+    function definirSaque(eq) {
+        // Simplemente definir quien saca manualmente
+        saqueEquipo = eq;
+        render();
+    }
+
+    // Funciones útiles
     function cambiarNombre(eq) {
         var n = prompt("Nombre:");
-        if(n) { document.getElementById('n'+eq).innerHTML = n.toUpperCase(); render(); }
+        var id = (eq === 0) ? 'nA' : 'nB';
+        if(n) { document.getElementById(id).innerHTML = n.toUpperCase(); render(); }
     }
 
     function cambiarReglaTB() {
         limiteTB = (limiteTB === 6) ? 5 : 6;
         document.getElementById('btn-regla').innerHTML = "TIE-BREAK: " + limiteTB + "-" + limiteTB;
+    }
+
+    function reiniciarPartido() {
+        if(confirm("¿Seguro reiniciar?")){ location.reload(); }
     }
 
     render();

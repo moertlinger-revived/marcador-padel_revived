@@ -2,45 +2,148 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>TABLERO EN VIVO</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TABLERO PROFESIONAL (ESTILO FIP)</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+    
     <style>
-        body { background: #000; color: #fff; font-family: 'Arial Black', sans-serif; text-align: center; margin: 0; padding: 20px; }
-        .cabecera { color: #ccff00; font-size: 20px; margin-bottom: 30px; }
-        .fila { display: flex; justify-content: center; align-items: center; background: #111; margin: 10px; border-radius: 15px; border-left: 10px solid #ccff00; padding: 20px; }
-        .nombre { flex: 2; text-align: left; font-size: 40px; text-transform: uppercase; }
-        .dato { flex: 1; font-size: 60px; color: #fff; }
-        .punto-actual { flex: 1; font-size: 80px; color: #ccff00; }
-        .tiebreak-aviso { color: red; font-size: 24px; animation: blink 1s infinite; }
-        @keyframes blink { 50% { opacity: 0; } }
+        :root {
+            --fip-dark: #0a0a20;   /* Fondo azul oscuro */
+            --fip-red: #d32f2f;    /* Fondo de Sets */
+            --fip-gold: #c6a052;   /* Fondo de Puntos Actuales */
+            --fip-number: #0a0a20; /* Color números en sets/puntos */
+            --fip-text: #fff;      /* Color texto nombres */
+            --fip-ball: #ccff00;   /* Color bolita de saque */
+        }
+
+        body {
+            margin: 0;
+            padding: 20px;
+            background-color: #000; /* Fondo negro externo */
+            font-family: 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+            color: var(--fip-text);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+
+        /* Contenedor principal del marcador */
+        #scoreboard {
+            width: 100%;
+            max-width: 900px;
+            background-color: var(--fip-dark);
+            border: 2px solid rgba(255,255,255,0.2);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            font-weight: bold;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Filas de equipos */
+        .fila-equipo {
+            display: flex;
+            border-bottom: 2px solid rgba(255,255,255,0.2);
+        }
+
+        /* Zona de Nombres */
+        .zona-nombres {
+            flex-grow: 1;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            border-right: 2px solid rgba(255,255,255,0.2);
+        }
+
+        .jugador {
+            font-size: 26px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin: 5px 0;
+            display: flex;
+            align-items: center;
+        }
+
+        /* Bolita amarilla de saque (aparece/desaparece) */
+        .saque-bola {
+            width: 18px;
+            height: 18px;
+            background-color: var(--fip-ball);
+            border-radius: 50%;
+            margin-left: 15px;
+            display: none; /* Se activa con JS */
+            box-shadow: 0 0 10px rgba(204, 255, 0, 0.5);
+        }
+
+        /* Zona de Números (Sets y Puntos) */
+        .zona-numeros {
+            display: flex;
+        }
+
+        .casillero {
+            width: 90px;
+            height: 110px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 60px;
+            font-weight: 900;
+            color: var(--fip-number);
+            border-right: 2px solid rgba(255,255,255,0.2);
+        }
+
+        /* Estilos específicos de casilleros */
+        .set { background-color: var(--fip-red); }
+        .puntos { 
+            background-color: var(--fip-gold); 
+            width: 120px; /* Más ancho para el "Ad" o "40" */
+            color: #000;
+        }
+
     </style>
 </head>
 <body>
 
-    <div class="cabecera">PARTIDO EN VIVO</div>
-    <div id="aviso" class="tiebreak-aviso" style="display:none">⚠️ TIE-BREAK ⚠️</div>
+    <div id="scoreboard">
+        <div class="fila-equipo">
+            <div class="zona-nombres">
+                <div class="jugador">
+                    <span id="web-n0">-</span>
+                    <div class="saque-bola" id="bola-0"></div>
+                </div>
+            </div>
+            <div class="zona-numeros">
+                <div class="casillero set" id="web-s1-0">0</div>
+                <div class="casillero set" id="web-s2-0">0</div>
+                <div class="casillero set" id="web-s3-0">0</div>
+                <div class="casillero puntos" id="web-p0">0</div>
+            </div>
+        </div>
 
-    <div class="fila">
-        <div class="nombre" id="web-n0">-</div>
-        <div class="dato" id="web-s0">0</div>
-        <div class="dato" id="web-g0">0</div>
-        <div class="punto-actual" id="web-p0">0</div>
-    </div>
-
-    <div class="fila">
-        <div class="nombre" id="web-n1">-</div>
-        <div class="dato" id="web-s1">0</div>
-        <div class="dato" id="web-g1">0</div>
-        <div class="punto-actual" id="web-p1">0</div>
+        <div class="fila-equipo">
+            <div class="zona-nombres">
+                <div class="jugador">
+                    <span id="web-n1">-</span>
+                    <div class="saque-bola" id="bola-1"></div>
+                </div>
+            </div>
+            <div class="zona-numeros">
+                <div class="casillero set" id="web-s1-1">0</div>
+                <div class="casillero set" id="web-s2-1">0</div>
+                <div class="casillero set" id="web-s3-1">0</div>
+                <div class="casillero puntos" id="web-p1">0</div>
+            </div>
+        </div>
     </div>
 
 <script>
-    // MISMA CONFIGURACIÓN QUE EL JUEZ
+    // ⚠️ ATENCIÓN MATÍAS: REEMPLAZA ESTO CON TUS DATOS DE FIREBASE ⚠️
     const firebaseConfig = {
-        apiKey: "AIzaSyCQkDrlFCRKMYDxM54dkl24hGu-e-ZdbMs",
-        databaseURL: "https://padel-vivo-default-rtdb.firebaseio.com",
-        projectId: "padel-vivo",
+        apiKey: "PEGAS_AQUI_TU_API_KEY",
+        databaseURL: "https://TU-PROYECTO.firebaseio.com",
+        projectId: "TU-ID-DE-PROYECTO",
     };
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
@@ -49,15 +152,40 @@
     db.ref("marcador/actual").on("value", (snap) => {
         const d = snap.val();
         if(!d) return;
+        
+        // Actualizar Nombres
         document.getElementById('web-n0').innerHTML = d.n0;
         document.getElementById('web-n1').innerHTML = d.n1;
-        document.getElementById('web-s0').innerHTML = d.s0;
-        document.getElementById('web-s1').innerHTML = d.s1;
-        document.getElementById('web-g0').innerHTML = d.g0;
-        document.getElementById('web-g1').innerHTML = d.g1;
+        
+        // Actualizar Puntos Actuales (Grandes)
         document.getElementById('web-p0').innerHTML = d.p0;
         document.getElementById('web-p1').innerHTML = d.p1;
-        document.getElementById('aviso').style.display = (d.m !== "NORMAL") ? "block" : "none";
+        
+        // Actualizar Historial de Sets
+        // Suponiendo que el juez envía arrays sA: [6,6,2] y sB: [3,4,6]
+        const setsA = d.h0 || [0,0,0]; // Historial Equipo A
+        const setsB = d.h1 || [0,0,0]; // Historial Equipo B
+        
+        document.getElementById('web-s1-0').innerHTML = setsA[0];
+        document.getElementById('web-s2-0').innerHTML = setsA[1];
+        document.getElementById('web-s3-0').innerHTML = setsA[2];
+        
+        document.getElementById('web-s1-1').innerHTML = setsB[0];
+        document.getElementById('web-s2-1').innerHTML = setsB[1];
+        document.getElementById('web-s3-1').innerHTML = setsB[2];
+
+        // Control de Saque (Bola amarilla)
+        // El juez envía quien saca (0 o 1)
+        if(d.s === 0) {
+            document.getElementById('bola-0').style.display = 'block';
+            document.getElementById('bola-1').style.display = 'none';
+        } else if(d.s === 1) {
+            document.getElementById('bola-0').style.display = 'none';
+            document.getElementById('bola-1').style.display = 'block';
+        } else {
+            document.getElementById('bola-0').style.display = 'none';
+            document.getElementById('bola-1').style.display = 'none';
+        }
     });
 </script>
 </body>
