@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>JUEZ PADEL PRO - V8</title>
+    <title>JUEZ PADEL PRO - V9</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
     <style>
@@ -13,13 +13,11 @@
         .config-regla { background: #333; color: #fff; border: 2px solid #555; padding: 8px; border-radius: 5px; font-size: 11px; font-weight: bold; cursor: pointer; }
         .config-regla.activo { background: #ccff00; color: #000; border-color: #ccff00; }
         .config-regla.oro-activo { background: #ffcc00; color: #000; border-color: #ffcc00; }
-        
         .zona-tiempos { display: flex; justify-content: space-around; background: #111; padding: 10px; border-radius: 10px; margin-bottom: 10px; border: 1px solid #333; }
         .timer-box { display: flex; flex-direction: column; align-items: center; gap: 3px; }
         .timer-label { font-size: 9px; color: #aaa; font-weight: bold; text-transform: uppercase; }
         .timer-val { font-family: monospace; font-size: 20px; color: #ccff00; font-weight: bold; }
         .btn-timer { font-size: 9px; padding: 4px; background: #444; color: white; border: none; border-radius: 3px; cursor: pointer; }
-        
         .tablero-juez { display: flex; flex-direction: column; gap: 10px; height: 50vh; }
         .equipo-juez { background: #111; border: 2px solid #333; border-radius: 15px; padding: 10px; flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: space-between; position: relative; }
         .color-picker { position: absolute; top: 10px; right: 10px; width: 25px; height: 25px; border-radius: 50%; border: 2px solid white; cursor: pointer; }
@@ -30,7 +28,6 @@
         .btn-punto { background: #c6a052; color: #000; }
         .btn-saque { background: #333; color: #ccff00; border: 1px solid #ccff00; }
         .btn-saque.activo { background: #ccff00; color: #000; }
-        
         .aviso-cambio { background: rgba(255, 204, 0, 0.95); color: #000; padding: 15px; font-weight: bold; border-radius: 10px; position: absolute; top: 10px; left: 10px; width: calc(100% - 20px); z-index: 100; display: none; cursor: pointer; border: 2px solid #fff; }
         .btn-reset-full { background: #800; color: white; border: 2px solid #f00; padding: 15px; border-radius: 10px; font-weight: bold; cursor: pointer; width: 100%; margin-top: 20px; font-size: 16px; text-transform: uppercase; }
     </style>
@@ -47,22 +44,11 @@
     </div>
 
     <div class="zona-tiempos">
-        <div class="timer-box">
-            <span class="timer-label">CALENTAMIENTO</span>
-            <span id="disp-peloteo" class="timer-val">05:00</span>
-            <div style="display:flex; gap:2px">
-                <button class="btn-timer" onclick="toggleTimer('peloteo')">PLAY</button>
-                <button class="btn-timer" onclick="resetTimer('peloteo')">RESET</button>
-                <button class="btn-timer" onclick="toggleVisibilidadPeloteo()">👁️</button>
-            </div>
+        <div class="timer-box"><span class="timer-label">CALENTAMIENTO</span><span id="disp-peloteo" class="timer-val">05:00</span>
+            <div style="display:flex; gap:2px"><button class="btn-timer" onclick="toggleTimer('peloteo')">PLAY</button><button class="btn-timer" onclick="resetTimer('peloteo')">RESET</button><button class="btn-timer" onclick="toggleVisibilidadPeloteo()">👁️</button></div>
         </div>
-        <div class="timer-box">
-            <span class="timer-label">DURACIÓN PARTIDO</span>
-            <span id="disp-partido" class="timer-val">00:00:00</span>
-            <div style="display:flex; gap:2px">
-                <button class="btn-timer" onclick="toggleTimer('partido')">PLAY</button>
-                <button class="btn-timer" onclick="resetTimer('partido')">RESET</button>
-            </div>
+        <div class="timer-box"><span class="timer-label">DURACIÓN PARTIDO</span><span id="disp-partido" class="timer-val">00:00:00</span>
+            <div style="display:flex; gap:2px"><button class="btn-timer" onclick="toggleTimer('partido')">PLAY</button><button class="btn-timer" onclick="resetTimer('partido')">RESET</button></div>
         </div>
     </div>
 
@@ -72,23 +58,16 @@
             <div class="nombre-eq" onclick="cambiarNombre(0)" id="nA">EQUIPO A</div>
             <div style="font-size: 10px; color: #aaa; font-weight: bold;">PUNTOS</div>
             <div class="puntos-juez" id="pA">0</div>
-            <div class="zona-controles">
-                <button class="btn-accion btn-punto" onclick="sumar(0)">+ PUNTO</button>
-                <button class="btn-accion btn-saque" id="saqueA" onclick="definirSaque(0)">SAQUE</button>
-            </div>
+            <div class="zona-controles"><button class="btn-accion btn-punto" onclick="sumar(0)">+ PUNTO</button><button class="btn-accion btn-saque" id="saqueA" onclick="definirSaque(0)">SAQUE</button></div>
         </div>
         <div class="equipo-juez">
             <input type="color" class="color-picker" id="colB" value="#d32f2f" onchange="render()">
             <div class="nombre-eq" onclick="cambiarNombre(1)" id="nB">EQUIPO B</div>
             <div style="font-size: 10px; color: #aaa; font-weight: bold;">PUNTOS</div>
             <div class="puntos-juez" id="pB">0</div>
-            <div class="zona-controles">
-                <button class="btn-accion btn-punto" onclick="sumar(1)">+ PUNTO</button>
-                <button class="btn-accion btn-saque" id="saqueB" onclick="definirSaque(1)">SAQUE</button>
-            </div>
+            <div class="zona-controles"><button class="btn-accion btn-punto" onclick="sumar(1)">+ PUNTO</button><button class="btn-accion btn-saque" id="saqueB" onclick="definirSaque(1)">SAQUE</button></div>
         </div>
     </div>
-
     <button class="btn-reset-full" onclick="reiniciarTodo()">🚨 REINICIAR TODO 🚨</button>
 
 <script>
@@ -106,21 +85,14 @@
             segDescanso--;
             document.getElementById('reloj-descanso').innerText = segDescanso;
         } else if(segDescanso === 0 && runDescanso) {
-            runDescanso = false;
-            cambioVisible = false;
+            runDescanso = false; cambioVisible = false;
             document.getElementById('cambio-lado').style.display = "none";
         }
-        
         let h=Math.floor(segPartido/3600).toString().padStart(2,'0'), m=Math.floor((segPartido%3600)/60).toString().padStart(2,'0'), s=(segPartido%60).toString().padStart(2,'0');
         let pm=Math.floor(segPeloteo/60).toString().padStart(2,'0'), ps=(segPeloteo%60).toString().padStart(2,'0');
         document.getElementById('disp-partido').innerText = `${h}:${m}:${s}`;
         document.getElementById('disp-peloteo').innerText = `${pm}:${ps}`;
-        
-        db.ref("marcador/tiempos").set({ 
-            tPart: `${h}:${m}:${s}`, tPel: `${pm}:${ps}`, vPel: showPeloteo,
-            tDesc: segDescanso, vDesc: cambioVisible, 
-            tiebreak: (modo === "TIE-BREAK")
-        });
+        db.ref("marcador/tiempos").set({ tPart: `${h}:${m}:${s}`, tPel: `${pm}:${ps}`, vPel: showPeloteo, tDesc: segDescanso, vDesc: cambioVisible, tiebreak: (modo === "TIE-BREAK") });
     }, 1000);
 
     function toggleTimer(t) { if(t==='partido') runPartido=!runPartido; else runPeloteo=!runPeloteo; }
@@ -131,13 +103,23 @@
         stack.push(JSON.stringify({pts:[...pts], h:[[...historialSets[0]],[...historialSets[1]]], sIdx:setActualIdx, m:modo, sq:saqueEquipo, tb: limiteTB, oro: puntoOroActivo}));
         if(!runPartido) runPartido = true;
         let ot=eq===0?1:0;
+
         if(modo==="NORMAL"){
             if(pts[eq]<3) pts[eq]++;
             else if(pts[eq]===3 && pts[ot]<3){ pts=[0,0]; ganarG(eq); }
             else if(pts[eq]===3 && pts[ot]===3){ if(puntoOroActivo) { pts=[0,0]; ganarG(eq); } else pts[eq]=4; }
             else if(pts[eq]===3 && pts[ot]===4) pts[ot]=3;
             else if(pts[eq]===4){ pts=[0,0]; ganarG(eq); }
-        } else { pts[eq]++; if(pts[eq]>=7 && pts[eq]-pts[ot]>=2){ pts=[0,0]; ganarG(eq); } }
+        } else { 
+            // LÓGICA TIE-BREAK FIP: Rotación de saque
+            pts[eq]++;
+            let totalPtsTB = pts[0] + pts[1];
+            // Regla FIP: El primer punto lo saca quien le tocaba, luego cada 2 puntos cambia el saque
+            if(totalPtsTB % 2 !== 0) { // Tras el punto 1, 3, 5, 7...
+                 saqueEquipo = (saqueEquipo === 0) ? 1 : 0;
+            }
+            if(pts[eq]>=7 && pts[eq]-pts[ot]>=2){ pts=[0,0]; ganarG(eq); }
+        }
         render();
     }
 
@@ -145,20 +127,26 @@
         historialSets[eq][setActualIdx]++;
         let gA=historialSets[0][setActualIdx], gB=historialSets[1][setActualIdx];
         let totalGames = gA + gB;
+
         if(totalGames === 1 && setActualIdx === 0) dispararAviso("SOLO CAMBIO DE LADO", 5); 
         else if((gA>=6||gB>=6) && Math.abs(gA-gB)>=2 || (modo === "TIE-BREAK")) {
-            let msg = (totalGames % 2 !== 0) ? "SET Y CAMBIO DE LADO" : "SET";
-            dispararAviso(msg, 120); ganarS();
+            dispararAviso((totalGames % 2 !== 0) ? "SET Y CAMBIO DE LADO" : "SET", 120);
+            ganarS();
         }
         else if(totalGames % 2 !== 0) dispararAviso("CAMBIO DE LADO", 90);
+        
+        // Entrar en modo Tie-Break
         if(gA===limiteTB && gB===limiteTB) modo="TIE-BREAK";
-        if(saqueEquipo!==-1) saqueEquipo=saqueEquipo===0?1:0;
+        else {
+            // Rotación normal de saque fuera de TB
+            if(saqueEquipo!==-1) saqueEquipo=saqueEquipo===0?1:0;
+        }
     }
 
-    function dispararAviso(mensaje, segundos) {
-        cambioVisible = true; segDescanso = segundos; runDescanso = true;
-        document.getElementById('msg-descanso').innerText = mensaje;
-        document.getElementById('reloj-descanso').innerText = segundos;
+    function dispararAviso(msg, seg) {
+        cambioVisible = true; segDescanso = seg; runDescanso = true;
+        document.getElementById('msg-descanso').innerText = msg;
+        document.getElementById('reloj-descanso').innerText = seg;
         document.getElementById('cambio-lado').style.display = "block";
     }
 
@@ -171,17 +159,13 @@
         document.getElementById('pB').innerText=modo==="NORMAL"?l[pts[1]]:pts[1];
         document.getElementById('saqueA').classList.toggle('activo', saqueEquipo===0);
         document.getElementById('saqueB').classList.toggle('activo', saqueEquipo===1);
-        document.getElementById('btn-regla').innerText = "TB: " + limiteTB + "-" + limiteTB;
         document.getElementById('btn-regla').classList.toggle('activo', limiteTB === 5);
-        document.getElementById('btn-oro').innerText = "ORO: " + (puntoOroActivo ? "SÍ" : "NO");
         document.getElementById('btn-oro').classList.toggle('oro-activo', puntoOroActivo);
-
         db.ref("marcador/actual").set({
             n0: document.getElementById('nA').innerText, n1: document.getElementById('nB').innerText,
             h0: historialSets[0], h1: historialSets[1], p0: document.getElementById('pA').innerText, p1: document.getElementById('pB').innerText,
             s: saqueEquipo, oro: (puntoOroActivo && pts[0]===3 && pts[1]===3), 
-            c0: document.getElementById('colA').value, c1: document.getElementById('colB').value,
-            msg: document.getElementById('msg-descanso').innerText
+            c0: document.getElementById('colA').value, c1: document.getElementById('colB').value, msg: document.getElementById('msg-descanso').innerText
         });
     }
 
@@ -189,7 +173,7 @@
     function cambiarNombre(eq) { let n=prompt("Nombre:"); if(n) document.getElementById(eq===0?'nA':'nB').innerText=n.toUpperCase(); render(); }
     function definirSaque(eq) { saqueEquipo=eq; render(); }
     function togglePuntoOro() { puntoOroActivo=!puntoOroActivo; render(); }
-    function cambiarReglaTB() { limiteTB=limiteTB===6?5:6; render(); }
+    function cambiarReglaTB() { limiteTB=limiteTB===6?5:6; document.getElementById('btn-regla').innerText = "TB: " + limiteTB + "-" + limiteTB; render(); }
     function reiniciarTodo() { if(confirm("🚨 REINICIAR TODO?")){ location.reload(); } }
     render();
 </script>
