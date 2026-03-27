@@ -3,35 +3,34 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TABLERO PROFESIONAL - PADEL VIVO</title>
+    <title>TABLERO PROFESIONAL CON REFERENCIAS</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
     
     <style>
         :root {
-            --fip-dark: #0a0a20;
-            --fip-red: #d32f2f;
-            --fip-gold: #c6a052;
-            --fip-number: #0a0a20;
-            --fip-text: #fff;
-            --fip-ball: #ccff00;
-            --fip-ref-text: rgba(255,255,255,0.6);
+            --fip-dark: #0a0a20;   /* Fondo azul oscuro */
+            --fip-red: #d32f2f;    /* Fondo de Sets */
+            --fip-gold: #c6a052;   /* Fondo de Puntos Actuales */
+            --fip-number: #0a0a20; /* Color números en sets/puntos */
+            --fip-text: #fff;      /* Color texto nombres */
+            --fip-ball: #ccff00;   /* Color bolita de saque */
+            --fip-ref-text: rgba(255,255,255,0.6); /* Color texto referencias (SET 1, etc.) */
         }
 
         body {
             margin: 0;
             padding: 20px;
-            background-color: #000;
+            background-color: #000; /* Fondo negro externo */
             font-family: 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
             color: var(--fip-text);
             display: flex;
-            flex-direction: column;
             justify-content: center;
             align-items: center;
             height: 100vh;
-            overflow: hidden;
         }
 
+        /* Contenedor principal del marcador */
         #scoreboard {
             width: 100%;
             max-width: 900px;
@@ -41,22 +40,27 @@
             font-weight: bold;
             display: flex;
             flex-direction: column;
-            position: relative;
         }
 
+        /* 🆕 NUEVA FILA: Referencias Superiores (SET 1, SET 2...) */
         .fila-referencias {
             display: flex;
             border-bottom: 1px solid rgba(255,255,255,0.1);
-            background-color: rgba(0,0,0,0.2);
+            background-color: rgba(0,0,0,0.2); /* Un tono más oscuro para diferenciar */
         }
 
-        .zona-nombres-vacia { flex-grow: 1; border-right: 2px solid rgba(255,255,255,0.2); }
+        .zona-nombres-vacia {
+            flex-grow: 1;
+            border-right: 2px solid rgba(255,255,255,0.2);
+        }
 
-        .zona-numeros-ref { display: flex; }
+        .zona-numeros-ref {
+            display: flex;
+        }
 
         .casillero-ref {
             width: 90px;
-            height: 30px;
+            height: 30px; /* Más baja que los números */
             display: flex;
             justify-content: center;
             align-items: center;
@@ -67,10 +71,20 @@
             border-right: 2px solid rgba(255,255,255,0.2);
         }
 
-        .casillero-ref.puntos-ref { width: 120px; color: var(--fip-gold); }
+        /* Referencia para la columna de PUNTOS (más ancha) */
+        .casillero-ref.puntos-ref {
+            width: 120px;
+            color: var(--fip-gold); /* Color oro para resaltar */
+        }
 
-        .fila-equipo { display: flex; border-bottom: 2px solid rgba(255,255,255,0.2); }
 
+        /* Filas de equipos */
+        .fila-equipo {
+            display: flex;
+            border-bottom: 2px solid rgba(255,255,255,0.2);
+        }
+
+        /* Zona de Nombres */
         .zona-nombres {
             flex-grow: 1;
             padding: 20px;
@@ -89,17 +103,21 @@
             align-items: center;
         }
 
+        /* Bolita amarilla de saque (aparece/desaparece) */
         .saque-bola {
             width: 18px;
             height: 18px;
             background-color: var(--fip-ball);
             border-radius: 50%;
             margin-left: 15px;
-            display: none;
+            display: none; /* Se activa con JS */
             box-shadow: 0 0 10px rgba(204, 255, 0, 0.5);
         }
 
-        .zona-numeros { display: flex; }
+        /* Zona de Números (Sets y Puntos) */
+        .zona-numeros {
+            display: flex;
+        }
 
         .casillero {
             width: 90px;
@@ -113,23 +131,14 @@
             border-right: 2px solid rgba(255,255,255,0.2);
         }
 
+        /* Estilos específicos de casilleros */
         .set { background-color: var(--fip-red); }
-        .puntos { background-color: var(--fip-gold); width: 120px; color: #000; }
-
-        #final-msg {
-            display: none;
-            background: var(--fip-ball);
+        .puntos { 
+            background-color: var(--fip-gold); 
+            width: 120px; /* Más ancho para el "Ad" o "40" */
             color: #000;
-            padding: 10px 40px;
-            font-size: 24px;
-            font-weight: 900;
-            margin-top: 20px;
-            text-transform: uppercase;
-            border-radius: 5px;
-            animation: blink 1s infinite;
         }
 
-        @keyframes blink { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
     </style>
 </head>
 <body>
@@ -176,9 +185,8 @@
         </div>
     </div>
 
-    <div id="final-msg">Partido Finalizado</div>
-
 <script>
+    // ⚠️ ATENCIÓN MATÍAS: REEMPLAZA ESTO CON TUS DATOS DE FIREBASE ⚠️
     const firebaseConfig = {
         apiKey: "AIzaSyCQkDrlFCRKMYDxM54dkl24hGu-e-ZdbMs",
         databaseURL: "https://padel-vivo-default-rtdb.firebaseio.com",
@@ -187,17 +195,22 @@
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
 
+    // ESCUCHAR CAMBIOS EN TIEMPO REAL
     db.ref("marcador/actual").on("value", (snap) => {
         const d = snap.val();
         if(!d) return;
         
+        // Actualizar Nombres
         document.getElementById('web-n0').innerHTML = d.n0;
         document.getElementById('web-n1').innerHTML = d.n1;
+        
+        // Actualizar Puntos Actuales (Grandes)
         document.getElementById('web-p0').innerHTML = d.p0;
         document.getElementById('web-p1').innerHTML = d.p1;
         
-        const setsA = d.h0 || [0,0,0];
-        const setsB = d.h1 || [0,0,0];
+        // Actualizar Historial de Sets
+        const setsA = d.h0 || [0,0,0]; // Historial Equipo A
+        const setsB = d.h1 || [0,0,0]; // Historial Equipo B
         
         document.getElementById('web-s1-0').innerHTML = setsA[0];
         document.getElementById('web-s2-0').innerHTML = setsA[1];
@@ -207,6 +220,7 @@
         document.getElementById('web-s2-1').innerHTML = setsB[1];
         document.getElementById('web-s3-1').innerHTML = setsB[2];
 
+        // Control de Saque (Bola amarilla)
         if(d.s === 0) {
             document.getElementById('bola-0').style.display = 'block';
             document.getElementById('bola-1').style.display = 'none';
@@ -217,9 +231,6 @@
             document.getElementById('bola-0').style.display = 'none';
             document.getElementById('bola-1').style.display = 'none';
         }
-
-        // Mostrar aviso de finalización
-        document.getElementById('final-msg').style.display = d.finalizado ? 'block' : 'none';
     });
 </script>
 </body>
