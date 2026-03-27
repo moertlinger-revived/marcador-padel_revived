@@ -15,121 +15,72 @@
             --fip-number: #0a0a20;
             --fip-text: #fff;
             --fip-ball: #ccff00;
-            --fip-ref-text: rgba(255,255,255,0.6);
         }
 
         body {
-            margin: 0;
-            padding: 20px;
-            background-color: #000;
-            font-family: 'Segoe UI', Roboto, sans-serif;
-            color: var(--fip-text);
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            overflow: hidden;
+            margin: 0; padding: 20px; background-color: #000;
+            font-family: 'Segoe UI', Roboto, sans-serif; color: #fff;
+            display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh;
         }
 
+        /* Tiempos superiores */
+        .header-timers {
+            width: 100%; max-width: 900px; display: flex; justify-content: space-between; margin-bottom: 10px;
+        }
+        .timer-display { background: #111; padding: 10px 20px; border-radius: 5px; border: 1px solid #333; font-family: monospace; }
+        .timer-label { font-size: 12px; color: #888; display: block; }
+        .timer-time { font-size: 24px; color: var(--fip-ball); font-weight: bold; }
+
         #scoreboard {
-            width: 100%;
-            max-width: 900px;
-            background-color: var(--fip-dark);
-            border: 2px solid rgba(255,255,255,0.2);
-            box-shadow: 0 10px 30px rgba(0,0,0,0.8);
-            display: flex;
-            flex-direction: column;
+            width: 100%; max-width: 900px; background-color: var(--fip-dark);
+            border: 2px solid rgba(255,255,255,0.2); box-shadow: 0 10px 40px rgba(0,0,0,0.8);
+            display: flex; flex-direction: column;
         }
 
         .fila-referencias { display: flex; background-color: rgba(0,0,0,0.4); }
         .zona-nombres-vacia { flex-grow: 1; border-right: 2px solid rgba(255,255,255,0.2); }
-        .casillero-ref {
-            width: 90px;
-            height: 35px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            font-size: 14px;
-            color: var(--fip-ref-text);
-            border-right: 2px solid rgba(255,255,255,0.2);
-        }
+        .casillero-ref { width: 90px; height: 35px; display: flex; justify-content: center; align-items: center; font-size: 14px; color: rgba(255,255,255,0.5); border-right: 2px solid rgba(255,255,255,0.2); }
         .puntos-ref { width: 140px; color: var(--fip-gold); font-weight: bold; }
 
         .fila-equipo { display: flex; border-top: 2px solid rgba(255,255,255,0.2); }
-        .zona-nombres {
-            flex-grow: 1;
-            padding: 20px;
-            display: flex;
-            align-items: center;
-            border-right: 2px solid rgba(255,255,255,0.2);
-        }
+        .zona-nombres { flex-grow: 1; padding: 20px; display: flex; align-items: center; border-right: 2px solid rgba(255,255,255,0.2); }
+        .jugador { font-size: 32px; font-weight: 900; text-transform: uppercase; }
+        .saque-bola { width: 20px; height: 20px; background: var(--fip-ball); border-radius: 50%; margin-left: 15px; display: none; box-shadow: 0 0 15px var(--fip-ball); }
 
-        .jugador { font-size: 32px; font-weight: 900; text-transform: uppercase; display: flex; align-items: center; }
-        .saque-bola {
-            width: 22px; height: 22px;
-            background-color: var(--fip-ball);
-            border-radius: 50%;
-            margin-left: 20px;
-            display: none;
-            box-shadow: 0 0 15px var(--fip-ball);
-        }
-
-        .casillero {
-            width: 90px;
-            height: 120px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            font-size: 70px;
-            font-weight: 900;
-            color: #fff;
-            border-right: 2px solid rgba(255,255,255,0.2);
-        }
+        .casillero { width: 90px; height: 110px; display: flex; justify-content: center; align-items: center; font-size: 60px; font-weight: 900; border-right: 2px solid rgba(255,255,255,0.2); }
         .set { background-color: var(--fip-red); }
-        .puntos { background-color: var(--fip-gold); width: 140px; color: #000; transition: all 0.3s; }
+        .puntos { background-color: var(--fip-gold); width: 140px; color: #000; transition: 0.3s; }
         
-        /* Animación Punto de Oro */
-        .gold-point-active {
-            animation: gold-glow 1s infinite alternate;
-            background-color: #fff !important;
-        }
+        .gold-point-active { animation: gold-glow 1s infinite alternate; }
+        @keyframes gold-glow { from { background-color: var(--fip-gold); } to { background-color: #fff; box-shadow: inset 0 0 20px #ffcc00; } }
 
-        @keyframes gold-glow {
-            from { box-shadow: inset 0 0 10px #000; }
-            to { box-shadow: inset 0 0 40px #ffcc00; background-color: #ffcc00 !important; }
-        }
-
-        #final-msg {
-            display: none;
-            background: var(--fip-ball);
-            color: #000;
-            padding: 15px 50px;
-            font-size: 30px;
-            font-weight: 900;
-            margin-top: 30px;
-            text-transform: uppercase;
-            border-radius: 8px;
-        }
+        #final-msg { display: none; background: var(--fip-ball); color: #000; padding: 15px 40px; font-size: 24px; font-weight: 900; margin-top: 20px; border-radius: 5px; }
     </style>
 </head>
 <body>
 
+    <div class="header-timers">
+        <div id="box-peloteo" class="timer-display">
+            <span class="timer-label">WARM UP</span>
+            <span id="web-tPeloteo" class="timer-time">05:00</span>
+        </div>
+        <div class="timer-display">
+            <span class="timer-label">MATCH TIME</span>
+            <span id="web-tPartido" class="timer-time">00:00:00</span>
+        </div>
+    </div>
+
     <div id="scoreboard">
         <div class="fila-referencias">
             <div class="zona-nombres-vacia"></div>
-            <div class="casillero-ref">SET 1</div>
-            <div class="casillero-ref">SET 2</div>
-            <div class="casillero-ref">SET 3</div>
+            <div class="casillero-ref">SET 1</div><div class="casillero-ref">SET 2</div><div class="casillero-ref">SET 3</div>
             <div class="casillero-ref puntos-ref">PUNTOS</div>
         </div>
 
         <div class="fila-equipo">
             <div class="zona-nombres">
-                <div class="jugador">
-                    <span id="web-n0">-</span>
-                    <div class="saque-bola" id="bola-0"></div>
-                </div>
+                <div class="jugador"><span id="web-n0">-</span></div>
+                <div class="saque-bola" id="bola-0"></div>
             </div>
             <div class="casillero set" id="web-s1-0">0</div>
             <div class="casillero set" id="web-s2-0">0</div>
@@ -139,10 +90,8 @@
 
         <div class="fila-equipo">
             <div class="zona-nombres">
-                <div class="jugador">
-                    <span id="web-n1">-</span>
-                    <div class="saque-bola" id="bola-1"></div>
-                </div>
+                <div class="jugador"><span id="web-n1">-</span></div>
+                <div class="saque-bola" id="bola-1"></div>
             </div>
             <div class="casillero set" id="web-s1-1">0</div>
             <div class="casillero set" id="web-s2-1">0</div>
@@ -163,35 +112,32 @@
     const db = firebase.database();
 
     db.ref("marcador/actual").on("value", (snap) => {
-        const d = snap.val();
-        if(!d) return;
+        const d = snap.val(); if(!d) return;
         
-        document.getElementById('web-n0').innerHTML = d.n0;
-        document.getElementById('web-n1').innerHTML = d.n1;
-        document.getElementById('web-p0').innerHTML = d.p0;
-        document.getElementById('web-p1').innerHTML = d.p1;
+        document.getElementById('web-n0').innerText = d.n0;
+        document.getElementById('web-n1').innerText = d.n1;
+        document.getElementById('web-p0').innerText = d.p0;
+        document.getElementById('web-p1').innerText = d.p1;
         
-        const sA = d.h0 || [0,0,0], sB = d.h1 || [0,0,0];
-        document.getElementById('web-s1-0').innerHTML = sA[0];
-        document.getElementById('web-s2-0').innerHTML = sA[1];
-        document.getElementById('web-s3-0').innerHTML = sA[2];
-        document.getElementById('web-s1-1').innerHTML = sB[0];
-        document.getElementById('web-s2-1').innerHTML = sB[1];
-        document.getElementById('web-s3-1').innerHTML = sB[2];
+        document.getElementById('web-s1-0').innerText = d.h0[0];
+        document.getElementById('web-s2-0').innerText = d.h0[1];
+        document.getElementById('web-s3-0').innerText = d.h0[2];
+        document.getElementById('web-s1-1').innerText = d.h1[0];
+        document.getElementById('web-s2-1').innerText = d.h1[1];
+        document.getElementById('web-s3-1').innerText = d.h1[2];
 
         document.getElementById('bola-0').style.display = (d.s === 0) ? 'block' : 'none';
         document.getElementById('bola-1').style.display = (d.s === 1) ? 'block' : 'none';
-
-        // Efecto Punto de Oro
-        if(d.oro) {
-            document.getElementById('web-p0').classList.add('gold-point-active');
-            document.getElementById('web-p1').classList.add('gold-point-active');
-        } else {
-            document.getElementById('web-p0').classList.remove('gold-point-active');
-            document.getElementById('web-p1').classList.remove('gold-point-active');
-        }
+        
+        document.getElementById('web-p0').className = "casillero puntos" + (d.oro ? " gold-point-active" : "");
+        document.getElementById('web-p1').className = "casillero puntos" + (d.oro ? " gold-point-active" : "");
 
         document.getElementById('final-msg').style.display = d.finalizado ? 'block' : 'none';
+
+        // Tiempos
+        document.getElementById('web-tPartido').innerText = d.tPartido;
+        document.getElementById('web-tPeloteo').innerText = d.tPeloteo;
+        document.getElementById('box-peloteo').style.display = d.vPeloteo ? 'block' : 'none';
     });
 </script>
 </body>
