@@ -3,62 +3,234 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TABLERO PROFESIONAL FIP - VIVO</title>
+    <title>TABLERO PROFESIONAL CON REFERENCIAS</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+    
     <style>
-        :root { --fip-dark: #0a0a20; --fip-red: #d32f2f; --fip-gold: #c6a052; --fip-number: #0a0a20; --fip-text: #fff; --fip-ball: #ccff00; --fip-ref-text: rgba(255,255,255,0.6); }
-        body { margin: 0; padding: 20px; background-color: #000; font-family: 'Segoe UI', Roboto, sans-serif; color: var(--fip-text); display: flex; flex-direction: column; justify-content: center; align-items: center; height: 100vh; }
-        #scoreboard { width: 100%; max-width: 900px; background-color: var(--fip-dark); border: 2px solid rgba(255,255,255,0.2); box-shadow: 0 10px 30px rgba(0,0,0,0.5); font-weight: bold; display: flex; flex-direction: column; }
-        .fila-referencias { display: flex; border-bottom: 1px solid rgba(255,255,255,0.1); background-color: rgba(0,0,0,0.2); }
-        .zona-nombres-vacia { flex-grow: 1; border-right: 2px solid rgba(255,255,255,0.2); }
-        .zona-numeros-ref { display: flex; }
-        .casillero-ref { width: 90px; height: 30px; display: flex; justify-content: center; align-items: center; font-size: 12px; text-transform: uppercase; color: var(--fip-ref-text); border-right: 2px solid rgba(255,255,255,0.2); }
-        .casillero-ref.puntos-ref { width: 120px; color: var(--fip-gold); }
-        .fila-equipo { display: flex; border-bottom: 2px solid rgba(255,255,255,0.2); }
-        .zona-nombres { flex-grow: 1; padding: 20px; display: flex; flex-direction: column; justify-content: center; border-right: 2px solid rgba(255,255,255,0.2); }
-        .jugador { font-size: 26px; text-transform: uppercase; display: flex; align-items: center; }
-        .saque-bola { width: 18px; height: 18px; background-color: var(--fip-ball); border-radius: 50%; margin-left: 15px; display: none; box-shadow: 0 0 10px rgba(204, 255, 0, 0.5); }
-        .zona-numeros { display: flex; }
-        .casillero { width: 90px; height: 110px; display: flex; justify-content: center; align-items: center; font-size: 60px; font-weight: 900; color: var(--fip-number); border-right: 2px solid rgba(255,255,255,0.2); }
-        .set { background-color: var(--fip-red); color: white; }
-        .puntos { background-color: var(--fip-gold); width: 120px; color: #000; }
-        .footer-tiempos { width: 100%; max-width: 900px; display: flex; margin-top: 10px; height: 60px; }
-        .box-tiempo { padding: 5px 20px; display: flex; flex-direction: column; justify-content: center; border-right: 2px solid rgba(255,255,255,0.1); }
-        #contenedor-peloteo { background-color: var(--fip-red); min-width: 150px; display: none; }
-        #contenedor-juego { background-color: rgba(255,255,255,0.1); min-width: 180px; }
-        .label-tiempo { font-size: 10px; text-transform: uppercase; color: var(--fip-ref-text); margin-bottom: 2px; }
-        .valor-tiempo { font-size: 28px; font-family: monospace; font-weight: 900; }
+        :root {
+            --fip-dark: #0a0a20;   /* Fondo azul oscuro */
+            --fip-red: #d32f2f;    /* Fondo de Sets */
+            --fip-gold: #c6a052;   /* Fondo de Puntos Actuales */
+            --fip-number: #0a0a20; /* Color números en sets/puntos */
+            --fip-text: #fff;      /* Color texto nombres */
+            --fip-ball: #ccff00;   /* Color bolita de saque */
+            --fip-ref-text: rgba(255,255,255,0.6); /* Color texto referencias (SET 1, etc.) */
+        }
+
+        body {
+            margin: 0;
+            padding: 20px;
+            background-color: #000; /* Fondo negro externo */
+            font-family: 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+            color: var(--fip-text);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+
+        /* Contenedor principal del marcador */
+        #scoreboard {
+            width: 100%;
+            max-width: 900px;
+            background-color: var(--fip-dark);
+            border: 2px solid rgba(255,255,255,0.2);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            font-weight: bold;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* 🆕 NUEVA FILA: Referencias Superiores (SET 1, SET 2...) */
+        .fila-referencias {
+            display: flex;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            background-color: rgba(0,0,0,0.2); /* Un tono más oscuro para diferenciar */
+        }
+
+        .zona-nombres-vacia {
+            flex-grow: 1;
+            border-right: 2px solid rgba(255,255,255,0.2);
+        }
+
+        .zona-numeros-ref {
+            display: flex;
+        }
+
+        .casillero-ref {
+            width: 90px;
+            height: 30px; /* Más baja que los números */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--fip-ref-text);
+            border-right: 2px solid rgba(255,255,255,0.2);
+        }
+
+        /* Referencia para la columna de PUNTOS (más ancha) */
+        .casillero-ref.puntos-ref {
+            width: 120px;
+            color: var(--fip-gold); /* Color oro para resaltar */
+        }
+
+
+        /* Filas de equipos */
+        .fila-equipo {
+            display: flex;
+            border-bottom: 2px solid rgba(255,255,255,0.2);
+        }
+
+        /* Zona de Nombres */
+        .zona-nombres {
+            flex-grow: 1;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            border-right: 2px solid rgba(255,255,255,0.2);
+        }
+
+        .jugador {
+            font-size: 26px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin: 5px 0;
+            display: flex;
+            align-items: center;
+        }
+
+        /* Bolita amarilla de saque (aparece/desaparece) */
+        .saque-bola {
+            width: 18px;
+            height: 18px;
+            background-color: var(--fip-ball);
+            border-radius: 50%;
+            margin-left: 15px;
+            display: none; /* Se activa con JS */
+            box-shadow: 0 0 10px rgba(204, 255, 0, 0.5);
+        }
+
+        /* Zona de Números (Sets y Puntos) */
+        .zona-numeros {
+            display: flex;
+        }
+
+        .casillero {
+            width: 90px;
+            height: 110px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 60px;
+            font-weight: 900;
+            color: var(--fip-number);
+            border-right: 2px solid rgba(255,255,255,0.2);
+        }
+
+        /* Estilos específicos de casilleros */
+        .set { background-color: var(--fip-red); }
+        .puntos { 
+            background-color: var(--fip-gold); 
+            width: 120px; /* Más ancho para el "Ad" o "40" */
+            color: #000;
+        }
+
     </style>
 </head>
 <body>
+
     <div id="scoreboard">
-        <div class="fila-referencias"><div class="zona-nombres-vacia"></div><div class="zona-numeros-ref"><div class="casillero-ref">SET 1</div><div class="casillero-ref">SET 2</div><div class="casillero-ref">SET 3</div><div class="casillero-ref puntos-ref">PUNTOS</div></div></div>
-        <div class="fila-equipo"><div class="zona-nombres"><div class="jugador"><span id="web-n0">-</span><div class="saque-bola" id="bola-0"></div></div></div>
-            <div class="zona-numeros"><div class="casillero set" id="web-s1-0">0</div><div class="casillero set" id="web-s2-0">0</div><div class="casillero set" id="web-s3-0">0</div><div class="casillero puntos" id="web-p0">0</div></div></div>
-        <div class="fila-equipo"><div class="zona-nombres"><div class="jugador"><span id="web-n1">-</span><div class="saque-bola" id="bola-1"></div></div></div>
-            <div class="zona-numeros"><div class="casillero set" id="web-s1-1">0</div><div class="casillero set" id="web-s2-1">0</div><div class="casillero set" id="web-s3-1">0</div><div class="casillero puntos" id="web-p1">0</div></div></div>
+        <div class="fila-referencias">
+            <div class="zona-nombres-vacia"></div>
+            <div class="zona-numeros-ref">
+                <div class="casillero-ref">SET 1</div>
+                <div class="casillero-ref">SET 2</div>
+                <div class="casillero-ref">SET 3</div>
+                <div class="casillero-ref puntos-ref">PUNTOS</div>
+            </div>
+        </div>
+
+        <div class="fila-equipo">
+            <div class="zona-nombres">
+                <div class="jugador">
+                    <span id="web-n0">-</span>
+                    <div class="saque-bola" id="bola-0"></div>
+                </div>
+            </div>
+            <div class="zona-numeros">
+                <div class="casillero set" id="web-s1-0">0</div>
+                <div class="casillero set" id="web-s2-0">0</div>
+                <div class="casillero set" id="web-s3-0">0</div>
+                <div class="casillero puntos" id="web-p0">0</div>
+            </div>
+        </div>
+
+        <div class="fila-equipo">
+            <div class="zona-nombres">
+                <div class="jugador">
+                    <span id="web-n1">-</span>
+                    <div class="saque-bola" id="bola-1"></div>
+                </div>
+            </div>
+            <div class="zona-numeros">
+                <div class="casillero set" id="web-s1-1">0</div>
+                <div class="casillero set" id="web-s2-1">0</div>
+                <div class="casillero set" id="web-s3-1">0</div>
+                <div class="casillero puntos" id="web-p1">0</div>
+            </div>
+        </div>
     </div>
-    <div class="footer-tiempos">
-        <div id="contenedor-peloteo" class="box-tiempo"><span class="label-tiempo" style="color: white;">Peloteo</span><span id="reloj-peloteo" class="valor-tiempo">05:00</span></div>
-        <div id="contenedor-juego" class="box-tiempo"><span class="label-tiempo">Tiempo de Juego</span><span id="reloj-juego" class="valor-tiempo">00:00:00</span></div>
-    </div>
+
 <script>
-    const firebaseConfig = { apiKey: "AIzaSyCQkDrlFCRKMYDxM54dkl24hGu-e-ZdbMs", databaseURL: "https://padel-vivo-default-rtdb.firebaseio.com", projectId: "padel-vivo" };
+    // ⚠️ ATENCIÓN MATÍAS: REEMPLAZA ESTO CON TUS DATOS DE FIREBASE ⚠️
+    const firebaseConfig = {
+        apiKey: "AIzaSyCQkDrlFCRKMYDxM54dkl24hGu-e-ZdbMs",
+        databaseURL: "https://padel-vivo-default-rtdb.firebaseio.com",
+        projectId: "padel-vivo",
+    };
     firebase.initializeApp(firebaseConfig);
-    firebase.database().ref("partido_actual").on("value", (snap) => {
-        const d = snap.val(); if(!d) return;
-        document.getElementById('contenedor-peloteo').style.display = d.mostrarPeloteo ? 'flex' : 'none';
-        document.getElementById('reloj-peloteo').innerHTML = d.tiempoPeloteo || "05:00";
-        document.getElementById('reloj-juego').innerHTML = d.tiempoJuego || "00:00:00";
-        document.getElementById('web-n0').innerHTML = d.nombreE1;
-        document.getElementById('web-n1').innerHTML = d.nombreE2;
-        document.getElementById('web-p0').innerHTML = d.puntosE1;
-        document.getElementById('web-p1').innerHTML = d.puntosE2;
-        document.getElementById('web-s1-0').innerHTML = d.s1e1; document.getElementById('web-s2-0').innerHTML = d.s2e1; document.getElementById('web-s3-0').innerHTML = d.s3e1;
-        document.getElementById('web-s1-1').innerHTML = d.s1e2; document.getElementById('web-s2-1').innerHTML = d.s2e2; document.getElementById('web-s3-1').innerHTML = d.s3e2;
-        document.getElementById('bola-0').style.display = (d.saque === 0) ? 'block' : 'none';
-        document.getElementById('bola-1').style.display = (d.saque === 1) ? 'block' : 'none';
+    const db = firebase.database();
+
+    // ESCUCHAR CAMBIOS EN TIEMPO REAL
+    db.ref("marcador/actual").on("value", (snap) => {
+        const d = snap.val();
+        if(!d) return;
+        
+        // Actualizar Nombres
+        document.getElementById('web-n0').innerHTML = d.n0;
+        document.getElementById('web-n1').innerHTML = d.n1;
+        
+        // Actualizar Puntos Actuales (Grandes)
+        document.getElementById('web-p0').innerHTML = d.p0;
+        document.getElementById('web-p1').innerHTML = d.p1;
+        
+        // Actualizar Historial de Sets
+        const setsA = d.h0 || [0,0,0]; // Historial Equipo A
+        const setsB = d.h1 || [0,0,0]; // Historial Equipo B
+        
+        document.getElementById('web-s1-0').innerHTML = setsA[0];
+        document.getElementById('web-s2-0').innerHTML = setsA[1];
+        document.getElementById('web-s3-0').innerHTML = setsA[2];
+        
+        document.getElementById('web-s1-1').innerHTML = setsB[0];
+        document.getElementById('web-s2-1').innerHTML = setsB[1];
+        document.getElementById('web-s3-1').innerHTML = setsB[2];
+
+        // Control de Saque (Bola amarilla)
+        if(d.s === 0) {
+            document.getElementById('bola-0').style.display = 'block';
+            document.getElementById('bola-1').style.display = 'none';
+        } else if(d.s === 1) {
+            document.getElementById('bola-0').style.display = 'none';
+            document.getElementById('bola-1').style.display = 'block';
+        } else {
+            document.getElementById('bola-0').style.display = 'none';
+            document.getElementById('bola-1').style.display = 'none';
+        }
     });
 </script>
 </body>
