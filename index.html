@@ -2,47 +2,74 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>TV DISPLAY - V15 COMPACT</title>
+    <title>TV DISPLAY - V16 PRO</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
     <style>
         body { margin: 0; background: #000; font-family: 'Segoe UI', sans-serif; color: #fff; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; overflow: hidden; }
-        .header { width: 950px; display: flex; justify-content: flex-start; margin-bottom: 10px; }
-        .timer-tv { background: #111; padding: 10px 20px; border-radius: 8px; border: 1px solid #333; text-align: center; min-width: 150px; }
-        .t-lab { font-size: 10px; color: #aaa; text-transform: uppercase; font-weight: bold; }
-        .t-val { font-size: 28px; color: #ccff00; font-family: monospace; font-weight: bold; }
         
+        /* Contenedor Superior de Avisos y Tiempos */
+        .header-status { width: 950px; display: flex; align-items: flex-end; gap: 10px; margin-bottom: 10px; height: 60px; }
+
+        .timer-tv { background: #111; padding: 5px 15px; border-radius: 6px; border: 1px solid #333; text-align: center; min-width: 140px; }
+        .t-lab { font-size: 9px; color: #aaa; text-transform: uppercase; font-weight: bold; display: block; }
+        .t-val { font-size: 24px; color: #ccff00; font-family: monospace; font-weight: bold; }
+
+        /* Anuncio Tie-Break (Estilo similar al reloj) */
+        #aviso-tiebreak { background: #d32f2f; padding: 5px 15px; border-radius: 6px; border: 1px solid #f00; text-align: center; min-width: 120px; display: none; animation: blink 1s infinite; }
+        .tb-txt { font-size: 18px; font-weight: 900; color: #fff; line-height: 40px; }
+
+        /* Anuncio Cambio de Lado Superior */
+        #aviso-tv-top { flex-grow: 1; background: #ffcc00; color: #000; border-radius: 6px; display: none; align-items: center; justify-content: center; gap: 15px; padding: 0 20px; height: 52px; border: 2px solid #fff; }
+        .msg-top { font-size: 18px; font-weight: 900; text-transform: uppercase; }
+        .desc-top { font-size: 32px; font-family: monospace; font-weight: 900; }
+
+        /* Marcador */
         #scoreboard { width: 950px; background: #0a0a20; border: 3px solid #333; position: relative; }
         .labels-row { display: flex; background: rgba(255,255,255,0.05); font-size: 14px; color: #aaa; font-weight: bold; border-bottom: 2px solid #333; }
         .label-equipo { flex-grow: 1; padding: 10px 25px; }
         .label-box { width: 90px; text-align: center; padding: 10px 0; border-left: 1px solid #333; }
         
-        /* Bloque de Equipo: Sin línea entre jugadores */
-        .equipo-block { display: flex; border-bottom: 5px solid #444; } /* Línea gruesa divisoria de equipos */
+        .equipo-block { display: flex; border-bottom: 5px solid #444; }
         .equipo-block:last-child { border-bottom: none; }
         
-        .nombres-col { flex-grow: 1; display: flex; flex-direction: column; justify-content: center; background: #0a0a20; }
-        .jugador-row { display: flex; height: 65px; align-items: center; } /* Altura reducida para juntarlos */
+        .nombres-col { flex-grow: 1; display: flex; flex-direction: column; justify-content: center; }
+        .jugador-row { display: flex; height: 65px; align-items: center; }
         .name-cell { flex-grow: 1; padding-left: 25px; font-size: 32px; font-weight: 800; display: flex; align-items: center; text-transform: uppercase; }
         
         .box { width: 90px; display: flex; justify-content: center; align-items: center; font-size: 60px; font-weight: 900; border-left: 2px solid #333; }
         .pts-cell { width: 160px; display: flex; justify-content: center; align-items: center; font-size: 100px; font-weight: 900; background: #c6a052; color: #000; border-left: 2px solid #333; }
         
         .bola { width: 20px; height: 20px; background: #ccff00; border-radius: 50%; margin-left: 15px; display: none; box-shadow: 0 0 15px #ccff00; }
-        .zona-avisos { width: 950px; margin-top: 15px; }
-        #aviso-tiebreak { background: #d32f2f; color: #fff; padding: 8px; border-radius: 10px; text-align: center; font-weight: 900; display: none; font-size: 20px; margin-bottom: 5px; }
-        #aviso-tv-bottom { background: #ffcc00; color: #000; padding: 15px; border-radius: 10px; text-align: center; font-weight: 900; display: none; justify-content: center; align-items: center; gap: 20px; border: 3px solid #fff; }
+        
+        @keyframes blink { 0% { opacity: 1; } 50% { opacity: 0.7; } 100% { opacity: 1; } }
         .oro-anim { animation: flash-gold 0.8s infinite alternate; }
         @keyframes flash-gold { from { background: #c6a052; } to { background: #fff; } }
     </style>
 </head>
 <body>
-    <div class="header">
-        <div class="timer-tv"><span id="label-timer" class="t-lab">PELOTEO</span><span id="val-timer" class="t-val">05:00</span></div>
+    <div class="header-status">
+        <div class="timer-tv">
+            <span id="label-timer" class="t-lab">PELOTEO</span>
+            <span id="val-timer" class="t-val">05:00</span>
+        </div>
+
+        <div id="aviso-tv-top">
+            <span class="msg-top" id="msg-tv-desc">CAMBIO DE LADO</span>
+            <span class="desc-top" id="descanso-tv-q">90</span>
+        </div>
+
+        <div id="aviso-tiebreak">
+            <span class="tb-txt">TIE-BREAK</span>
+        </div>
     </div>
     
     <div id="scoreboard">
-        <div class="labels-row"><div class="label-equipo">EQUIPOS / JUGADORES</div><div class="label-box">SET 1</div><div class="label-box">SET 2</div><div class="label-box">SET 3</div><div style="width:160px; text-align:center; padding:10px 0; border-left:1px solid #333; color:#c6a052">PUNTOS</div></div>
+        <div class="labels-row">
+            <div class="label-equipo">EQUIPOS / JUGADORES</div>
+            <div class="label-box">SET 1</div><div class="label-box">SET 2</div><div class="label-box">SET 3</div>
+            <div style="width:160px; text-align:center; padding:10px 0; border-left:1px solid #333; color:#c6a052">PUNTOS</div>
+        </div>
         
         <div class="equipo-block">
             <div class="nombres-col">
@@ -63,24 +90,30 @@
         </div>
     </div>
 
-    <div class="zona-avisos">
-        <div id="aviso-tiebreak">🎾 TIE-BREAK 🎾</div>
-        <div id="aviso-tv-bottom">
-            <span style="font-size: 24px;" id="msg-tv-desc">CAMBIO DE LADO</span>
-            <span style="font-size: 50px; font-family: monospace;" id="descanso-tv-q">90</span>
-        </div>
-    </div>
-
 <script>
     const firebaseConfig = { apiKey: "AIzaSyCQkDrlFCRKMYDxM54dkl24hGu-e-ZdbMs", databaseURL: "https://padel-vivo-default-rtdb.firebaseio.com", projectId: "padel-vivo" };
     firebase.initializeApp(firebaseConfig); const db = firebase.database();
 
     db.ref("marcador/tiempos").on("value", (snap) => {
         const t = snap.val(); if(!t) return;
-        if(t.vPel) { document.getElementById('label-timer').innerText = "PELOTEO"; document.getElementById('val-timer').innerText = t.tPel; }
-        else { document.getElementById('label-timer').innerText = "TIEMPO PARTIDO"; document.getElementById('val-timer').innerText = t.tPar; }
-        document.getElementById('aviso-tv-bottom').style.display = (t.vDesc && t.tDesc > 0) ? 'flex' : 'none';
-        document.getElementById('descanso-tv-q').innerText = t.tDesc;
+        if(t.vPel) { 
+            document.getElementById('label-timer').innerText = "PELOTEO"; 
+            document.getElementById('val-timer').innerText = t.tPel; 
+        } else { 
+            document.getElementById('label-timer').innerText = "TIEMPO PARTIDO"; 
+            document.getElementById('val-timer').innerText = t.tPar; 
+        }
+        
+        // Aviso Cambio de Lado Superior
+        const avisoTop = document.getElementById('aviso-tv-top');
+        if(t.vDesc && t.tDesc > 0) {
+            avisoTop.style.display = 'flex';
+            document.getElementById('descanso-tv-q').innerText = t.tDesc;
+        } else {
+            avisoTop.style.display = 'none';
+        }
+
+        // Anuncio Tie-Break Superior
         document.getElementById('aviso-tiebreak').style.display = t.tiebreak ? 'block' : 'none';
     });
 
@@ -90,7 +123,10 @@
         document.getElementById('n2').innerText=d.n2; document.getElementById('n3').innerText=d.n3;
         document.getElementById('pA').innerText=d.p0; document.getElementById('pB').innerText=d.p1;
         document.getElementById('msg-tv-desc').innerText = d.msg;
-        [0,1,2].forEach(i => { document.getElementById(`s${i+1}-0`).innerText = d.h0[i]; document.getElementById(`s${i+1}-1`).innerText = d.h1[i]; });
+        [0,1,2].forEach(i => { 
+            document.getElementById(`s${i+1}-0`).innerText = d.h0[i]; 
+            document.getElementById(`s${i+1}-1`).innerText = d.h1[i]; 
+        });
         for(let i=0; i<4; i++) document.getElementById(`b${i}`).style.display = (d.sIdx===i) ? 'block' : 'none';
         document.getElementById('pA').classList.toggle('oro-anim', d.oro);
         document.getElementById('pB').classList.toggle('oro-anim', d.oro);
