@@ -2,74 +2,65 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>TV DISPLAY - PADEL VIVO V7</title>
+    <title>TV DISPLAY - PADEL VIVO V13</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
     <style>
-        body { margin: 0; background: #000; font-family: 'Segoe UI', sans-serif; color: #fff; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; }
-        #scoreboard { width: 950px; background: #0a0a20; border: 3px solid #333; }
+        body { margin: 0; background: #000; font-family: 'Segoe UI', sans-serif; color: #fff; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; overflow: hidden; }
+        .header { width: 950px; display: flex; justify-content: space-between; margin-bottom: 10px; }
+        .timer-tv { background: #111; padding: 10px 20px; border-radius: 8px; border: 1px solid #333; text-align: center; }
+        .timer-tv span { display: block; }
+        .t-lab { font-size: 10px; color: #aaa; text-transform: uppercase; font-weight: bold; }
+        .t-val { font-size: 28px; color: #ccff00; font-family: monospace; font-weight: bold; }
         
+        #scoreboard { width: 950px; background: #0a0a20; border: 3px solid #333; position: relative; }
         .labels-row { display: flex; background: rgba(255,255,255,0.05); font-size: 14px; color: #aaa; font-weight: bold; border-bottom: 2px solid #333; }
-        .label-equipo { flex-grow: 1; padding: 10px 20px; }
+        .label-equipo { flex-grow: 1; padding: 10px 25px; }
         .label-box { width: 90px; text-align: center; padding: 10px 0; border-left: 1px solid #333; }
-        .label-pts { width: 150px; text-align: center; padding: 10px 0; border-left: 1px solid #333; color: #c6a052; }
-
-        .equipo-block { border-bottom: 4px solid #333; }
-        .jugador-row { display: flex; height: 70px; align-items: center; border-bottom: 1px solid #222; }
-        .jugador-row:last-child { border-bottom: none; }
-        
-        .name-cell { flex-grow: 1; padding-left: 20px; font-size: 28px; font-weight: 800; display: flex; align-items: center; }
-        .box { width: 90px; height: 100%; display: flex; justify-content: center; align-items: center; font-size: 50px; font-weight: 900; border-left: 2px solid #333; background: #0a0a20; }
-        .pts-cell { width: 150px; height: 140px; display: flex; justify-content: center; align-items: center; font-size: 90px; font-weight: 900; background: #c6a052; color: #000; border-left: 2px solid #333; }
-        
-        .bola { width: 18px; height: 18px; background: #ccff00; border-radius: 50%; margin-left: 15px; display: none; box-shadow: 0 0 10px #ccff00; }
+        .equipo-block { display: flex; border-bottom: 4px solid #333; }
+        .equipo-block:last-child { border-bottom: none; }
+        .nombres-col { flex-grow: 1; }
+        .jugador-row { display: flex; height: 80px; align-items: center; border-bottom: 1px solid #222; }
+        .name-cell { flex-grow: 1; padding-left: 25px; font-size: 32px; font-weight: 800; display: flex; align-items: center; text-transform: uppercase; }
+        .box { width: 90px; display: flex; justify-content: center; align-items: center; font-size: 60px; font-weight: 900; border-left: 2px solid #333; }
+        .pts-cell { width: 160px; display: flex; justify-content: center; align-items: center; font-size: 100px; font-weight: 900; background: #c6a052; color: #000; border-left: 2px solid #333; }
+        .bola { width: 22px; height: 22px; background: #ccff00; border-radius: 50%; margin-left: 20px; display: none; box-shadow: 0 0 15px #ccff00; }
+        .oro-anim { animation: flash-gold 0.8s infinite alternate; }
+        @keyframes flash-gold { from { background: #c6a052; } to { background: #fff; } }
     </style>
 </head>
 <body>
+    <div class="header">
+        <div id="tv-pel" class="timer-tv"><span class="t-lab">PELOTEO</span><span id="tv-tPel" class="t-val">05:00</span></div>
+        <div class="timer-tv"><span class="t-lab">PARTIDO</span><span id="tv-tPar" class="t-val">00:00:00</span></div>
+    </div>
+    
     <div id="scoreboard">
-        <div class="labels-row">
-            <div class="label-equipo">EQUIPOS / JUGADORES</div>
-            <div class="label-box">SET 1</div><div class="label-box">SET 2</div><div class="label-box">SET 3</div>
-            <div class="label-pts">PUNTOS</div>
-        </div>
-
-        <div class="equipo-block" style="display: flex;">
-            <div style="flex-grow: 1;">
-                <div class="jugador-row"><div class="name-cell"><span id="n0">-</span><div id="b0" class="bola"></div></div></div>
-                <div class="jugador-row"><div class="name-cell"><span id="n1">-</span><div id="b1" class="bola"></div></div></div>
-            </div>
-            <div class="box" id="s1-0">0</div><div class="box" id="s2-0">0</div><div class="box" id="s3-0">0</div>
-            <div class="pts-cell" id="pA">0</div>
-        </div>
-
-        <div class="equipo-block" style="display: flex; border-bottom: none;">
-            <div style="flex-grow: 1;">
-                <div class="jugador-row"><div class="name-cell"><span id="n2">-</span><div id="b2" class="bola"></div></div></div>
-                <div class="jugador-row"><div class="name-cell"><span id="n3">-</span><div id="b3" class="bola"></div></div></div>
-            </div>
-            <div class="box" id="s1-1">0</div><div class="box" id="s2-1">0</div><div class="box" id="s3-1">0</div>
-            <div class="pts-cell" id="pB">0</div>
-        </div>
+        <div class="labels-row"><div class="label-equipo">EQUIPOS / JUGADORES</div><div class="label-box">SET 1</div><div class="label-box">SET 2</div><div class="label-box">SET 3</div><div style="width:160px; text-align:center; padding:10px 0; border-left:1px solid #333; color:#c6a052">PUNTOS</div></div>
+        <div class="equipo-block"><div class="nombres-col"><div class="jugador-row"><div class="name-cell"><span id="n0">-</span><div id="b0" class="bola"></div></div></div><div class="jugador-row"><div class="name-cell"><span id="n1">-</span><div id="b1" class="bola"></div></div></div></div><div class="box" id="s1-0">0</div><div class="box" id="s2-0">0</div><div class="box" id="s3-0">0</div><div class="pts-cell" id="pA">0</div></div>
+        <div class="equipo-block"><div class="nombres-col"><div class="jugador-row"><div class="name-cell"><span id="n2">-</span><div id="b2" class="bola"></div></div></div><div class="jugador-row"><div class="name-cell"><span id="n3">-</span><div id="b3" class="bola"></div></div></div></div><div class="box" id="s1-1">0</div><div class="box" id="s2-1">0</div><div class="box" id="s3-1">0</div><div class="pts-cell" id="pB">0</div></div>
     </div>
 
 <script>
     const firebaseConfig = { apiKey: "AIzaSyCQkDrlFCRKMYDxM54dkl24hGu-e-ZdbMs", databaseURL: "https://padel-vivo-default-rtdb.firebaseio.com", projectId: "padel-vivo" };
     firebase.initializeApp(firebaseConfig); const db = firebase.database();
 
+    db.ref("marcador/tiempos").on("value", (snap) => {
+        const t = snap.val(); if(!t) return;
+        document.getElementById('tv-tPar').innerText = t.tPar;
+        document.getElementById('tv-tPel').innerText = t.tPel;
+        document.getElementById('tv-pel').style.display = t.vPel ? 'block' : 'none';
+    });
+
     db.ref("marcador/actual").on("value", (snap) => {
         const d = snap.val(); if(!d) return;
-        document.getElementById('n0').innerText = d.n0; document.getElementById('n1').innerText = d.n1;
-        document.getElementById('n2').innerText = d.n2; document.getElementById('n3').innerText = d.n3;
-        document.getElementById('pA').innerText = d.p0; document.getElementById('pB').innerText = d.p1;
-        
-        [0,1,2].forEach(i => {
-            document.getElementById(`s${i+1}-0`).innerText = d.h0[i];
-            document.getElementById(`s${i+1}-1`).innerText = d.h1[i];
-        });
-
-        for(let i=0; i<4; i++) {
-            document.getElementById(`b${i}`).style.display = (d.sIdx === i) ? 'block' : 'none';
-        }
+        document.getElementById('n0').innerText=d.n0; document.getElementById('n1').innerText=d.n1;
+        document.getElementById('n2').innerText=d.n2; document.getElementById('n3').innerText=d.n3;
+        document.getElementById('pA').innerText=d.p0; document.getElementById('pB').innerText=d.p1;
+        [0,1,2].forEach(i => { document.getElementById(`s${i+1}-0`).innerText = d.h0[i]; document.getElementById(`s${i+1}-1`).innerText = d.h1[i]; });
+        for(let i=0; i<4; i++) document.getElementById(`b${i}`).style.display = (d.sIdx===i) ? 'block' : 'none';
+        document.getElementById('pA').classList.toggle('oro-anim', d.oro);
+        document.getElementById('pB').classList.toggle('oro-anim', d.oro);
     });
 </script>
 </body>

@@ -3,43 +3,39 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>JUEZ PADEL PRO - V11 (4 JUGADORES)</title>
+    <title>JUEZ PADEL PRO - V13</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
     <style>
         * { box-sizing: border-box; touch-action: manipulation; }
         body { font-family: sans-serif; background: #000; color: #fff; margin: 0; padding: 5px; text-align: center; }
-        .encabezado { background: #222; padding: 10px; border-radius: 10px; margin-bottom: 5px; display: flex; flex-wrap: wrap; justify-content: center; gap: 5px; }
-        .config-regla { background: #333; color: #fff; border: 2px solid #555; padding: 8px; border-radius: 5px; font-size: 11px; font-weight: bold; cursor: pointer; }
-        .config-regla.activo { background: #ccff00; color: #000; border-color: #ccff00; }
         
+        /* Botones de configuración */
+        .encabezado { background: #222; padding: 10px; border-radius: 10px; margin-bottom: 5px; display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; }
+        .config-regla { background: #333; color: #fff; border: 2px solid #555; padding: 10px; border-radius: 5px; font-size: 12px; font-weight: bold; cursor: pointer; min-width: 100px; }
+        .config-regla.activo { background: #ccff00; color: #000; border-color: #fff; }
+        .config-regla.oro-activo { background: #ffcc00; color: #000; border-color: #fff; }
+        
+        /* Cronómetros */
         .zona-tiempos { display: flex; justify-content: space-around; background: #111; padding: 8px; border-radius: 10px; margin-bottom: 5px; border: 1px solid #333; }
-        .timer-box { display: flex; flex-direction: column; align-items: center; }
+        .timer-box { display: flex; flex-direction: column; align-items: center; gap: 4px; }
         .timer-label { font-size: 8px; color: #aaa; font-weight: bold; }
-        .timer-val { font-family: monospace; font-size: 18px; color: #ccff00; }
-        
+        .timer-val { font-family: monospace; font-size: 18px; color: #ccff00; font-weight: bold; }
+        .btn-t { font-size: 9px; padding: 3px 6px; background: #444; color: #fff; border: none; border-radius: 3px; cursor: pointer; }
+
         .tablero-juez { display: flex; flex-direction: column; gap: 8px; }
-        .equipo-contenedor { background: #111; border: 2px solid #333; border-radius: 12px; padding: 10px; position: relative; }
-        .equipo-titulo { font-size: 10px; color: #ccff00; font-weight: bold; margin-bottom: 5px; }
-        
-        .fila-jugador { display: flex; align-items: center; justify-content: space-between; background: #222; margin-bottom: 4px; padding: 5px 10px; border-radius: 5px; border: 1px solid #444; }
+        .equipo-contenedor { background: #111; border: 2px solid #333; border-radius: 12px; padding: 10px; }
+        .fila-jugador { display: flex; align-items: center; justify-content: space-between; background: #222; margin-bottom: 5px; padding: 8px; border-radius: 8px; border: 2px solid transparent; }
         .fila-jugador.sirviendo { border-color: #ccff00; background: #2a2a00; }
         .nombre-j { font-size: 14px; font-weight: bold; flex-grow: 1; text-align: left; }
+        .btn-saque-mini { font-size: 10px; padding: 6px; background: #444; color: #fff; border: 1px solid #666; border-radius: 5px; }
+        .btn-saque-mini.activo { background: #ccff00; color: #000; }
         
-        .puntos-display { font-size: 50px; font-weight: 900; color: #c6a052; margin: 5px 0; }
-        .btn-punto { width: 100%; padding: 15px; background: #c6a052; border: none; border-radius: 10px; font-size: 18px; font-weight: bold; cursor: pointer; }
-        
-        .btn-saque-mini { font-size: 10px; padding: 5px 8px; background: #333; color: #fff; border: 1px solid #555; border-radius: 4px; }
-        .btn-saque-mini.activo { background: #ccff00; color: #000; border-color: #fff; }
-
-        .aviso-cambio { background: rgba(255, 204, 0, 0.95); color: #000; padding: 15px; font-weight: bold; border-radius: 10px; position: absolute; top: 10px; left: 10px; width: calc(100% - 20px); z-index: 100; display: none; }
+        .puntos-display { font-size: 55px; font-weight: 900; color: #c6a052; margin: 5px 0; }
+        .btn-punto { width: 100%; padding: 15px; background: #c6a052; border: none; border-radius: 10px; font-size: 18px; font-weight: bold; color: #000; }
     </style>
 </head>
 <body>
-    <div id="cambio-lado" class="aviso-cambio" onclick="this.style.display='none'">
-        <span id="msg-descanso">CAMBIO</span> (<span id="reloj-descanso">90</span>s)
-    </div>
-
     <div class="encabezado">
         <button class="config-regla" onclick="cambiarReglaTB()" id="btn-regla">TB: 6-6</button>
         <button class="config-regla" onclick="togglePuntoOro()" id="btn-oro">ORO: NO</button>
@@ -47,35 +43,35 @@
     </div>
 
     <div class="zona-tiempos">
-        <div class="timer-box"><span class="timer-label">PELOTEO</span><span id="disp-peloteo" class="timer-val">05:00</span></div>
-        <div class="timer-box"><span class="timer-label">PARTIDO</span><span id="disp-partido" class="timer-val">00:00:00</span></div>
+        <div class="timer-box">
+            <span class="timer-label">PELOTEO</span>
+            <span id="disp-peloteo" class="timer-val">05:00</span>
+            <div>
+                <button class="btn-t" onclick="toggleTimer('peloteo')">PLAY</button>
+                <button class="btn-t" onclick="resetTimer('peloteo')">RESET</button>
+                <button class="btn-t" onclick="toggleVis('peloteo')">👁️</button>
+            </div>
+        </div>
+        <div class="timer-box">
+            <span class="timer-label">PARTIDO</span>
+            <span id="disp-partido" class="timer-val">00:00:00</span>
+            <div>
+                <button class="btn-t" onclick="toggleTimer('partido')">PLAY</button>
+                <button class="btn-t" onclick="resetTimer('partido')">RESET</button>
+            </div>
+        </div>
     </div>
 
     <div class="tablero-juez">
         <div class="equipo-contenedor">
-            <div class="equipo-titulo">EQUIPO 1</div>
-            <div class="fila-jugador" id="f-j0">
-                <span class="nombre-j" onclick="cambiarNombre(0)" id="n0">JUGADOR 1A</span>
-                <button class="btn-saque-mini" id="btn-s0" onclick="definirSaque(0)">SAQUE</button>
-            </div>
-            <div class="fila-jugador" id="f-j1">
-                <span class="nombre-j" onclick="cambiarNombre(1)" id="n1">JUGADOR 1B</span>
-                <button class="btn-saque-mini" id="btn-s1" onclick="definirSaque(1)">SAQUE</button>
-            </div>
+            <div class="fila-jugador" id="f-j0"><span class="nombre-j" id="n0" onclick="cambiarNombre(0)">JUGADOR 1A</span><button class="btn-saque-mini" id="btn-s0" onclick="definirSaque(0)">SAQUE</button></div>
+            <div class="fila-jugador" id="f-j1"><span class="nombre-j" id="n1" onclick="cambiarNombre(1)">JUGADOR 1B</span><button class="btn-saque-mini" id="btn-s1" onclick="definirSaque(1)">SAQUE</button></div>
             <div class="puntos-display" id="pA">0</div>
             <button class="btn-punto" onclick="sumar(0)">+ PUNTO EQ 1</button>
         </div>
-
         <div class="equipo-contenedor">
-            <div class="equipo-titulo">EQUIPO 2</div>
-            <div class="fila-jugador" id="f-j2">
-                <span class="nombre-j" onclick="cambiarNombre(2)" id="n2">JUGADOR 2A</span>
-                <button class="btn-saque-mini" id="btn-s2" onclick="definirSaque(2)">SAQUE</button>
-            </div>
-            <div class="fila-jugador" id="f-j3">
-                <span class="nombre-j" onclick="cambiarNombre(3)" id="n3">JUGADOR 2B</span>
-                <button class="btn-saque-mini" id="btn-s3" onclick="definirSaque(3)">SAQUE</button>
-            </div>
+            <div class="fila-jugador" id="f-j2"><span class="nombre-j" id="n2" onclick="cambiarNombre(2)">JUGADOR 2A</span><button class="btn-saque-mini" id="btn-s2" onclick="definirSaque(2)">SAQUE</button></div>
+            <div class="fila-jugador" id="f-j3"><span class="nombre-j" id="n3" onclick="cambiarNombre(3)">JUGADOR 2B</span><button class="btn-saque-mini" id="btn-s3" onclick="definirSaque(3)">SAQUE</button></div>
             <div class="puntos-display" id="pB">0</div>
             <button class="btn-punto" onclick="sumar(1)">+ PUNTO EQ 2</button>
         </div>
@@ -86,82 +82,96 @@
     firebase.initializeApp(firebaseConfig); const db = firebase.database();
 
     let pts = [0,0], historialSets = [[0,0,0], [0,0,0]], setActualIdx = 0, modo = "NORMAL", limiteTB = 6, puntoOroActivo = false;
-    let saqueJugadorIdx = -1; // 0, 1, 2 o 3
-    let proximoSacadorEq = [0, 2]; // Indica a quién le toca sacar en el equipo A (0 o 1) y B (2 o 3)
-    let stack = [];
+    let saqueJugadorIdx = -1, proximoSacadorEq = [0, 2], stack = [];
+    let segP = 0, segPel = 300, runP = false, runPel = false, visPel = true;
+
+    // Lógica de Tiempos
+    setInterval(() => {
+        if(runP) segP++;
+        if(runPel && segPel > 0) segPel--;
+        
+        let h=Math.floor(segP/3600).toString().padStart(2,'0'), m=Math.floor((segP%3600)/60).toString().padStart(2,'0'), s=(segP%60).toString().padStart(2,'0');
+        let pm=Math.floor(segPel/60).toString().padStart(2,'0'), ps=(segPel%60).toString().padStart(2,'0');
+        
+        document.getElementById('disp-partido').innerText = `${h}:${m}:${s}`;
+        document.getElementById('disp-peloteo').innerText = `${pm}:${ps}`;
+        
+        db.ref("marcador/tiempos").set({ tPar: `${h}:${m}:${s}`, tPel: `${pm}:${ps}`, vPel: visPel });
+    }, 1000);
+
+    function toggleTimer(t) { if(t==='partido') runP=!runP; else runPel=!runPel; }
+    function resetTimer(t) { if(t==='partido') segP=0; else segPel=300; }
+    function toggleVis() { visPel = !visPel; render(); }
 
     function sumar(eq) {
-        stack.push(JSON.stringify({pts:[...pts], h:[[...historialSets[0]],[...historialSets[1]]], sIdx:setActualIdx, m:modo, sq:saqueJugadorIdx, pS:[...proximoSacadorEq]}));
-        let ot=eq===0?1:0;
-
-        if(modo==="NORMAL"){
+        // GUARDAR ESTADO PARA CORREGIR
+        stack.push(JSON.stringify({pts:[...pts], h:[[...historialSets[0]],[...historialSets[1]]], sIdx:setActualIdx, m:modo, sq:saqueJugadorIdx, pS:[...proximoSacadorEq], oro: puntoOroActivo, lim: limiteTB}));
+        
+        let ot = eq === 0 ? 1 : 0;
+        if(modo === "NORMAL") {
             if(pts[eq]<3) pts[eq]++;
-            else if(pts[eq]===3 && pts[ot]<3){ pts=[0,0]; ganarG(eq); }
-            else if(pts[eq]===3 && pts[ot]===3){ if(puntoOroActivo) { pts=[0,0]; ganarG(eq); } else pts[eq]=4; }
+            else if(pts[eq]===3 && pts[ot]<3) { pts=[0,0]; ganarG(eq); }
+            else if(pts[eq]===3 && pts[ot]===3) { if(puntoOroActivo) { pts=[0,0]; ganarG(eq); } else pts[eq]=4; }
             else if(pts[eq]===3 && pts[ot]===4) pts[ot]=3;
-            else if(pts[eq]===4){ pts=[0,0]; ganarG(eq); }
-        } else { 
+            else if(pts[eq]===4) { pts=[0,0]; ganarG(eq); }
+        } else {
             pts[eq]++;
             if((pts[0]+pts[1]) % 2 !== 0) rotarSaqueTB();
-            if(pts[eq]>=7 && pts[eq]-pts[ot]>=2){ pts=[0,0]; ganarG(eq); }
+            if(pts[eq]>=7 && (pts[eq]-pts[ot])>=2) { pts=[0,0]; ganarG(eq); }
         }
         render();
     }
 
     function ganarG(eq) {
         historialSets[eq][setActualIdx]++;
-        let gTotal = historialSets[0][setActualIdx] + historialSets[1][setActualIdx];
-        
-        // Rotar sacador del equipo que acaba de terminar de sacar
         if(saqueJugadorIdx === 0 || saqueJugadorIdx === 1) proximoSacadorEq[0] = (saqueJugadorIdx === 0) ? 1 : 0;
         else if(saqueJugadorIdx === 2 || saqueJugadorIdx === 3) proximoSacadorEq[1] = (saqueJugadorIdx === 2) ? 3 : 2;
+        let siguienteEq = (saqueJugadorIdx < 2) ? 1 : 0;
+        saqueJugadorIdx = (siguienteEq === 0) ? proximoSacadorEq[0] : proximoSacadorEq[1];
 
-        // Definir quién saca el siguiente game
-        let siguienteEquipo = (saqueJugadorIdx < 2) ? 1 : 0;
-        saqueJugadorIdx = (siguienteEquipo === 0) ? proximoSacadorEq[0] : proximoSacadorEq[1];
-
-        if(historialSets[0][setActualIdx] === limiteTB && historialSets[1][setActualIdx] === limiteTB) modo="TIE-BREAK";
-        else if((historialSets[eq][setActualIdx]>=6) && Math.abs(historialSets[0][setActualIdx]-historialSets[1][setActualIdx])>=2) ganarS();
+        let gA = historialSets[0][setActualIdx], gB = historialSets[1][setActualIdx];
+        if(gA === limiteTB && gB === limiteTB) modo = "TIE-BREAK";
+        else if((gA>=6 || gB>=6) && Math.abs(gA-gB)>=2) ganarS();
     }
 
     function rotarSaqueTB() {
-        if(saqueJugadorIdx < 2) { // Sacaba equipo A, pasa a B
-            saqueJugadorIdx = proximoSacadorEq[1];
-            proximoSacadorEq[1] = (proximoSacadorEq[1] === 2) ? 3 : 2;
-        } else { // Sacaba equipo B, pasa a A
-            saqueJugadorIdx = proximoSacadorEq[0];
-            proximoSacadorEq[0] = (proximoSacadorEq[0] === 0) ? 1 : 0;
+        if(saqueJugadorIdx < 2) { saqueJugadorIdx = proximoSacadorEq[1]; proximoSacadorEq[1] = (proximoSacadorEq[1] === 2) ? 3 : 2; }
+        else { saqueJugadorIdx = proximoSacadorEq[0]; proximoSacadorEq[0] = (proximoSacadorEq[0] === 0) ? 1 : 0; }
+    }
+
+    function deshacer() {
+        if(stack.length > 0) {
+            let e = JSON.parse(stack.pop());
+            pts=e.pts; historialSets=e.h; setActualIdx=e.sIdx; modo=e.m; saqueJugadorIdx=e.sq; proximoSacadorEq=e.pS; puntoOroActivo=e.oro; limiteTB=e.lim;
+            render();
         }
     }
 
-    function definirSaque(idx) { 
-        saqueJugadorIdx = idx; 
-        if(idx < 2) proximoSacadorEq[0] = idx; else proximoSacadorEq[1] = idx;
-        render(); 
-    }
+    function togglePuntoOro() { puntoOroActivo = !puntoOroActivo; render(); }
+    function cambiarReglaTB() { limiteTB = (limiteTB === 6) ? 5 : 6; render(); }
+    function definirSaque(idx) { saqueJugadorIdx = idx; render(); }
+    function cambiarNombre(i) { let n = prompt("Nombre:"); if(n) document.getElementById('n'+i).innerText = n.toUpperCase(); render(); }
 
     function render() {
-        let l=["0","15","30","40","Ad"];
-        document.getElementById('pA').innerText=modo==="NORMAL"?l[pts[0]]:pts[0];
-        document.getElementById('pB').innerText=modo==="NORMAL"?l[pts[1]]:pts[1];
-        
+        const l = ["0","15","30","40","Ad"];
+        document.getElementById('pA').innerText = modo==="NORMAL" ? l[pts[0]] : pts[0];
+        document.getElementById('pB').innerText = modo==="NORMAL" ? l[pts[1]] : pts[1];
+        document.getElementById('btn-oro').innerText = "ORO: " + (puntoOroActivo ? "SÍ" : "NO");
+        document.getElementById('btn-oro').className = "config-regla" + (puntoOroActivo ? " oro-activo" : "");
+        document.getElementById('btn-regla').innerText = "TB: " + limiteTB + "-" + limiteTB;
+        document.getElementById('btn-regla').className = "config-regla" + (limiteTB === 5 ? " activo" : "");
         for(let i=0; i<4; i++) {
             document.getElementById(`btn-s${i}`).classList.toggle('activo', saqueJugadorIdx === i);
             document.getElementById(`f-j${i}`).classList.toggle('sirviendo', saqueJugadorIdx === i);
         }
-
         db.ref("marcador/actual").set({
             n0: document.getElementById('n0').innerText, n1: document.getElementById('n1').innerText,
             n2: document.getElementById('n2').innerText, n3: document.getElementById('n3').innerText,
             h0: historialSets[0], h1: historialSets[1], p0: document.getElementById('pA').innerText, p1: document.getElementById('pB').innerText,
-            sIdx: saqueJugadorIdx, modo: modo
+            sIdx: saqueJugadorIdx, modo: modo, oro: (puntoOroActivo && pts[0]===3 && pts[1]===3)
         });
     }
-
-    function ganarS() { if(setActualIdx<2){ setActualIdx++; modo="NORMAL"; pts=[0,0]; render(); } }
-    function cambiarNombre(i) { let n=prompt("Nombre Jugador:"); if(n) document.getElementById('n'+i).innerText=n.toUpperCase(); render(); }
-    function togglePuntoOro() { puntoOroActivo=!puntoOroActivo; render(); }
-    function cambiarReglaTB() { limiteTB=limiteTB===6?5:6; render(); }
+    function ganarS() { if(setActualIdx < 2) { setActualIdx++; modo="NORMAL"; pts=[0,0]; render(); } }
     render();
 </script>
 </body>
