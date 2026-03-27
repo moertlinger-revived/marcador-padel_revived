@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>JUEZ PADEL PRO - V15</title>
+    <title>JUEZ PADEL PRO - V19</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
     <style>
@@ -42,11 +42,22 @@
     </div>
 
     <div class="zona-tiempos">
-        <div class="timer-box"><span class="timer-label">CALENTAMIENTO</span><span id="disp-peloteo" class="timer-val">05:00</span>
-            <div><button class="btn-t" onclick="toggleTimer('peloteo')">PLAY</button><button class="btn-t" onclick="resetTimer('peloteo')">RESET</button><button class="btn-t" onclick="toggleVisPeloteo()">👁️</button></div>
+        <div class="timer-box">
+            <span class="timer-label">CALENTAMIENTO</span>
+            <span id="disp-peloteo" class="timer-val">05:00</span>
+            <div>
+                <button class="btn-t" onclick="toggleTimer('peloteo')">PLAY</button>
+                <button class="btn-t" onclick="resetTimer('peloteo')">RESET</button>
+                <button class="btn-t" onclick="toggleVisPeloteo()">👁️</button>
+            </div>
         </div>
-        <div class="timer-box"><span class="timer-label">PARTIDO</span><span id="disp-partido" class="timer-val">00:00:00</span>
-            <div><button class="btn-t" onclick="toggleTimer('partido')">PLAY</button><button class="btn-t" onclick="resetTimer('partido')">RESET</button></div>
+        <div class="timer-box">
+            <span class="timer-label">PARTIDO</span>
+            <span id="disp-partido" class="timer-val">00:00:00</span>
+            <div>
+                <button class="btn-t" onclick="toggleTimer('partido')">PLAY</button>
+                <button class="btn-t" onclick="resetTimer('partido')">RESET</button>
+            </div>
         </div>
     </div>
 
@@ -75,14 +86,24 @@
     let segDescanso = 0, runDescanso = false, cambioVisible = false;
 
     setInterval(() => {
-        if(runP) segP++; if(runPel && segPel > 0) segPel--;
-        if(runDescanso && segDescanso > 0) { segDescanso--; document.getElementById('reloj-descanso').innerText = segDescanso; }
-        else if(segDescanso === 0 && runDescanso) { aceptarCambio(); }
+        if(runP) segP++;
+        if(runPel && segPel > 0) segPel--;
+        if(runDescanso && segDescanso > 0) {
+            segDescanso--;
+            document.getElementById('reloj-descanso').innerText = segDescanso;
+        } else if(segDescanso === 0 && runDescanso) {
+            aceptarCambio();
+        }
+        
         let h=Math.floor(segP/3600).toString().padStart(2,'0'), m=Math.floor((segP%3600)/60).toString().padStart(2,'0'), s=(segP%60).toString().padStart(2,'0');
         let pm=Math.floor(segPel/60).toString().padStart(2,'0'), ps=(segPel%60).toString().padStart(2,'0');
         document.getElementById('disp-partido').innerText = `${h}:${m}:${s}`;
         document.getElementById('disp-peloteo').innerText = `${pm}:${ps}`;
-        db.ref("marcador/tiempos").set({ tPar: `${h}:${m}:${s}`, tPel: `${pm}:${ps}`, vPel: visPel, tDesc: segDescanso, vDesc: cambioVisible, tiebreak: (modo === "TIE-BREAK") });
+        
+        db.ref("marcador/tiempos").set({ 
+            tPar: `${h}:${m}:${s}`, tPel: `${pm}:${ps}`, vPel: visPel,
+            tDesc: segDescanso, vDesc: cambioVisible, tiebreak: (modo === "TIE-BREAK")
+        });
     }, 1000);
 
     function toggleTimer(t) { if(t==='partido') runP=!runP; else runPel=!runPel; }
@@ -92,6 +113,7 @@
     function sumar(eq) {
         stack.push(JSON.stringify({pts:[...pts], h:[[...historialSets[0]],[...historialSets[1]]], sIdx:setActualIdx, m:modo, sq:saqueJugadorIdx, pS:[...proximoSacadorEq], oro: puntoOroActivo, lim: limiteTB}));
         if(!runP && !visPel) runP = true;
+        
         let ot = eq === 0 ? 1 : 0;
         if(modo === "NORMAL") {
             if(pts[eq]<3) pts[eq]++;
@@ -101,6 +123,9 @@
             else if(pts[eq]===4) { pts=[0,0]; ganarG(eq); }
         } else {
             pts[eq]++;
+            // REGLA: Cambio de lado cada 6 puntos en Tie-Break (sin descanso)
+            if((pts[0] + pts[1]) % 6 === 0) dispararAviso("CAMBIO DE LADO (TB)", 10);
+            
             if((pts[0]+pts[1]) % 2 !== 0) rotarSaqueTB();
             if(pts[eq]>=7 && (pts[eq]-pts[ot])>=2) { pts=[0,0]; ganarG(eq); }
         }
@@ -109,22 +134,21 @@
 
     function ganarG(eq) {
         historialSets[eq][setActualIdx]++;
-        let totalG = historialSets[0][setActualIdx] + historialSets[1][setActualIdx];
+        let gA = historialSets[0][setActualIdx], gB = historialSets[1][setActualIdx];
+        let totalG = gA + gB;
 
-        // Saque
         if(saqueJugadorIdx === 0 || saqueJugadorIdx === 1) proximoSacadorEq[0] = (saqueJugadorIdx === 0) ? 1 : 0;
         else if(saqueJugadorIdx === 2 || saqueJugadorIdx === 3) proximoSacadorEq[1] = (saqueJugadorIdx === 2) ? 3 : 2;
         let siguienteEq = (saqueJugadorIdx < 2) ? 1 : 0;
         saqueJugadorIdx = (siguienteEq === 0) ? proximoSacadorEq[0] : proximoSacadorEq[1];
 
-        // REGLA: Si el primer game del set (totalG == 1) NO hay descanso, solo cambio.
-        if(totalG === 1) { dispararAviso("SOLO CAMBIO DE LADO", 10); }
-        else if((historialSets[0][setActualIdx]>=6||historialSets[1][setActualIdx]>=6) && Math.abs(historialSets[0][setActualIdx]-historialSets[1][setActualIdx])>=2 || modo==="TIE-BREAK") {
+        if(totalG === 1) dispararAviso("SOLO CAMBIO DE LADO", 10);
+        else if((gA>=6||gB>=6) && Math.abs(gA-gB)>=2 || modo==="TIE-BREAK") {
             dispararAviso((totalG % 2 !== 0) ? "SET Y CAMBIO" : "SET FINALIZADO", 120); ganarS();
         }
         else if(totalG % 2 !== 0) dispararAviso("CAMBIO DE LADO", 90);
 
-        if(historialSets[0][setActualIdx] === limiteTB && historialSets[1][setActualIdx] === limiteTB) modo = "TIE-BREAK";
+        if(gA === limiteTB && gB === limiteTB) modo = "TIE-BREAK";
     }
 
     function dispararAviso(msg, seg) {
@@ -133,13 +157,30 @@
         document.getElementById('cambio-lado').style.display = "block";
     }
 
-    function aceptarCambio() { cambioVisible = false; runDescanso = false; document.getElementById('cambio-lado').style.display = "none"; render(); }
-    function rotarSaqueTB() { if(saqueJugadorIdx < 2) { saqueJugadorIdx = proximoSacadorEq[1]; proximoSacadorEq[1] = (proximoSacadorEq[1] === 2) ? 3 : 2; } else { saqueJugadorIdx = proximoSacadorEq[0]; proximoSacadorEq[0] = (proximoSacadorEq[0] === 0) ? 1 : 0; } }
-    function deshacer() { if(stack.length > 0) { let e = JSON.parse(stack.pop()); pts=e.pts; historialSets=e.h; setActualIdx=e.sIdx; modo=e.m; saqueJugadorIdx=e.sq; proximoSacadorEq=e.pS; puntoOroActivo=e.oro; limiteTB=e.lim; render(); } }
+    function aceptarCambio() { 
+        cambioVisible = false; runDescanso = false;
+        document.getElementById('cambio-lado').style.display = "none"; 
+        render();
+    }
+
+    function rotarSaqueTB() {
+        if(saqueJugadorIdx < 2) { saqueJugadorIdx = proximoSacadorEq[1]; proximoSacadorEq[1] = (proximoSacadorEq[1] === 2) ? 3 : 2; }
+        else { saqueJugadorIdx = proximoSacadorEq[0]; proximoSacadorEq[0] = (proximoSacadorEq[0] === 0) ? 1 : 0; }
+    }
+
+    function deshacer() {
+        if(stack.length > 0) {
+            let e = JSON.parse(stack.pop());
+            pts=e.pts; historialSets=e.h; setActualIdx=e.sIdx; modo=e.m; saqueJugadorIdx=e.sq; proximoSacadorEq=e.pS; puntoOroActivo=e.oro; limiteTB=e.lim;
+            render();
+        }
+    }
+
     function togglePuntoOro() { puntoOroActivo = !puntoOroActivo; render(); }
     function cambiarReglaTB() { limiteTB = (limiteTB === 6) ? 5 : 6; render(); }
     function definirSaque(idx) { saqueJugadorIdx = idx; render(); }
     function cambiarNombre(i) { let n = prompt("Nombre:"); if(n) document.getElementById('n'+i).innerText = n.toUpperCase(); render(); }
+
     function render() {
         const l = ["0","15","30","40","Ad"];
         document.getElementById('pA').innerText = modo==="NORMAL" ? l[pts[0]] : pts[0];
@@ -148,8 +189,16 @@
         document.getElementById('btn-oro').className = "config-regla" + (puntoOroActivo ? " oro-activo" : "");
         document.getElementById('btn-regla').innerText = "TB: " + limiteTB + "-" + limiteTB;
         document.getElementById('btn-regla').className = "config-regla" + (limiteTB === 5 ? " activo" : "");
-        for(let i=0; i<4; i++) { document.getElementById(`btn-s${i}`).classList.toggle('activo', saqueJugadorIdx === i); document.getElementById(`f-j${i}`).classList.toggle('sirviendo', saqueJugadorIdx === i); }
-        db.ref("marcador/actual").set({ n0: document.getElementById('n0').innerText, n1: document.getElementById('n1').innerText, n2: document.getElementById('n2').innerText, n3: document.getElementById('n3').innerText, h0: historialSets[0], h1: historialSets[1], p0: document.getElementById('pA').innerText, p1: document.getElementById('pB').innerText, sIdx: saqueJugadorIdx, modo: modo, oro: (puntoOroActivo && pts[0]===3 && pts[1]===3), msg: document.getElementById('msg-descanso').innerText });
+        for(let i=0; i<4; i++) {
+            document.getElementById(`btn-s${i}`).classList.toggle('activo', saqueJugadorIdx === i);
+            document.getElementById(`f-j${i}`).classList.toggle('sirviendo', saqueJugadorIdx === i);
+        }
+        db.ref("marcador/actual").set({
+            n0: document.getElementById('n0').innerText, n1: document.getElementById('n1').innerText,
+            n2: document.getElementById('n2').innerText, n3: document.getElementById('n3').innerText,
+            h0: historialSets[0], h1: historialSets[1], p0: document.getElementById('pA').innerText, p1: document.getElementById('pB').innerText,
+            sIdx: saqueJugadorIdx, modo: modo, oro: (puntoOroActivo && pts[0]===3 && pts[1]===3), msg: document.getElementById('msg-descanso').innerText
+        });
     }
     function ganarS() { if(setActualIdx < 2) { setActualIdx++; modo="NORMAL"; pts=[0,0]; render(); } }
     render();
