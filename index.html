@@ -3,21 +3,28 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DISPLAY LIVE</title>
+    <title>TV DISPLAY - PADEL VIVO</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
     <style>
-        body { margin: 0; background: #000; font-family: 'Segoe UI', sans-serif; color: #fff; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; }
+        body { margin: 0; background: #000; font-family: 'Segoe UI', sans-serif; color: #fff; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; overflow: hidden; }
         .header { width: 900px; display: flex; justify-content: space-between; margin-bottom: 15px; }
         .timer { background: #111; padding: 10px 25px; border-radius: 5px; border: 1px solid #333; text-align: center; }
         .t-time { font-size: 26px; color: #ccff00; font-family: monospace; font-weight: bold; }
-        #scoreboard { width: 900px; background: #0a0a20; border: 2px solid #333; }
+        #scoreboard { width: 900px; background: #0a0a20; border: 2px solid #333; position: relative; }
         .row { display: flex; border-top: 2px solid #333; }
         .names { flex-grow: 1; padding: 20px; font-size: 32px; font-weight: 900; display: flex; align-items: center; }
         .box { width: 90px; height: 100px; display: flex; justify-content: center; align-items: center; font-size: 60px; font-weight: 900; border-left: 2px solid #333; }
         .pts { width: 140px; background: #c6a052; color: #000; }
         .bola { width: 20px; height: 20px; background: #ccff00; border-radius: 50%; margin-left: 15px; display: none; box-shadow: 0 0 10px #ccff00; }
-        .cambio { background: #ffcc00; color: #000; width: 900px; text-align: center; padding: 10px; font-weight: 900; margin-top: 10px; display: none; }
+        
+        /* Estilo para el aviso de cambio en TV */
+        #aviso-tv { 
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%; 
+            background: rgba(255, 204, 0, 0.95); color: #000; 
+            display: none; flex-direction: column; justify-content: center; align-items: center;
+            z-index: 10; font-weight: 900;
+        }
         .oro-anim { animation: pulse 0.5s infinite alternate; }
         @keyframes pulse { from { opacity: 1; } to { opacity: 0.5; } }
     </style>
@@ -28,6 +35,10 @@
         <div class="timer"><span id="tPar" class="t-time">00:00:00</span></div>
     </div>
     <div id="scoreboard">
+        <div id="aviso-tv">
+            <div style="font-size: 40px;">CAMBIO DE LADO</div>
+            <div style="font-size: 80px;" id="descanso-tv">90</div>
+        </div>
         <div class="row">
             <div class="names"><span id="n0">-</span><div id="s0" class="bola"></div></div>
             <div class="box" id="s1-0">0</div><div class="box" id="s2-0">0</div><div class="box" id="s3-0">0</div>
@@ -39,16 +50,22 @@
             <div class="box pts" id="p1">0</div>
         </div>
     </div>
-    <div id="aviso" class="cambio">CAMBIO DE LADO / SWITCH SIDES</div>
+
 <script>
     const firebaseConfig = { apiKey: "AIzaSyCQkDrlFCRKMYDxM54dkl24hGu-e-ZdbMs", databaseURL: "https://padel-vivo-default-rtdb.firebaseio.com", projectId: "padel-vivo" };
     firebase.initializeApp(firebaseConfig); const db = firebase.database();
+
     db.ref("marcador/tiempos").on("value", (snap) => {
         const t = snap.val(); if(!t) return;
         document.getElementById('tPar').innerText = t.tPart;
         document.getElementById('tPel').innerText = t.tPel;
         document.getElementById('box-pel').style.display = t.vPel ? 'block' : 'none';
+        
+        // Control del aviso de descanso
+        document.getElementById('aviso-tv').style.display = t.vDesc ? 'flex' : 'none';
+        document.getElementById('descanso-tv').innerText = t.tDesc;
     });
+
     db.ref("marcador/actual").on("value", (snap) => {
         const d = snap.val(); if(!d) return;
         document.getElementById('n0').innerText = d.n0; document.getElementById('n1').innerText = d.n1;
@@ -61,7 +78,6 @@
         });
         document.getElementById('s0').style.display = d.s === 0 ? 'block' : 'none';
         document.getElementById('s1').style.display = d.s === 1 ? 'block' : 'none';
-        document.getElementById('aviso').style.display = d.cambio ? 'block' : 'none';
         document.getElementById('p0').classList.toggle('oro-anim', d.oro);
         document.getElementById('p1').classList.toggle('oro-anim', d.oro);
     });
