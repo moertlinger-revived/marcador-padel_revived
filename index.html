@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TABLERO PROFESIONAL (ESTILO FIP)</title>
+    <title>TABLERO PROFESIONAL CON REFERENCIAS</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
     
@@ -15,6 +15,7 @@
             --fip-number: #0a0a20; /* Color números en sets/puntos */
             --fip-text: #fff;      /* Color texto nombres */
             --fip-ball: #ccff00;   /* Color bolita de saque */
+            --fip-ref-text: rgba(255,255,255,0.6); /* Color texto referencias (SET 1, etc.) */
         }
 
         body {
@@ -40,6 +41,42 @@
             display: flex;
             flex-direction: column;
         }
+
+        /* 🆕 NUEVA FILA: Referencias Superiores (SET 1, SET 2...) */
+        .fila-referencias {
+            display: flex;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            background-color: rgba(0,0,0,0.2); /* Un tono más oscuro para diferenciar */
+        }
+
+        .zona-nombres-vacia {
+            flex-grow: 1;
+            border-right: 2px solid rgba(255,255,255,0.2);
+        }
+
+        .zona-numeros-ref {
+            display: flex;
+        }
+
+        .casillero-ref {
+            width: 90px;
+            height: 30px; /* Más baja que los números */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--fip-ref-text);
+            border-right: 2px solid rgba(255,255,255,0.2);
+        }
+
+        /* Referencia para la columna de PUNTOS (más ancha) */
+        .casillero-ref.puntos-ref {
+            width: 120px;
+            color: var(--fip-gold); /* Color oro para resaltar */
+        }
+
 
         /* Filas de equipos */
         .fila-equipo {
@@ -107,6 +144,16 @@
 <body>
 
     <div id="scoreboard">
+        <div class="fila-referencias">
+            <div class="zona-nombres-vacia"></div>
+            <div class="zona-numeros-ref">
+                <div class="casillero-ref">SET 1</div>
+                <div class="casillero-ref">SET 2</div>
+                <div class="casillero-ref">SET 3</div>
+                <div class="casillero-ref puntos-ref">PUNTOS</div>
+            </div>
+        </div>
+
         <div class="fila-equipo">
             <div class="zona-nombres">
                 <div class="jugador">
@@ -141,9 +188,9 @@
 <script>
     // ⚠️ ATENCIÓN MATÍAS: REEMPLAZA ESTO CON TUS DATOS DE FIREBASE ⚠️
     const firebaseConfig = {
-        apiKey: "AIzaSyCQkDrlFCRKMYDxM54dkl24hGu-e-ZdbMs",
-        databaseURL: "https://padel-vivo-default-rtdb.firebaseio.com",
-        projectId: "padel-vivo",
+        apiKey: "PEGAS_AQUI_TU_API_KEY",
+        databaseURL: "https://TU-PROYECTO.firebaseio.com",
+        projectId: "TU-ID-DE-PROYECTO",
     };
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
@@ -162,7 +209,6 @@
         document.getElementById('web-p1').innerHTML = d.p1;
         
         // Actualizar Historial de Sets
-        // Suponiendo que el juez envía arrays sA: [6,6,2] y sB: [3,4,6]
         const setsA = d.h0 || [0,0,0]; // Historial Equipo A
         const setsB = d.h1 || [0,0,0]; // Historial Equipo B
         
@@ -175,7 +221,6 @@
         document.getElementById('web-s3-1').innerHTML = setsB[2];
 
         // Control de Saque (Bola amarilla)
-        // El juez envía quien saca (0 o 1)
         if(d.s === 0) {
             document.getElementById('bola-0').style.display = 'block';
             document.getElementById('bola-1').style.display = 'none';
