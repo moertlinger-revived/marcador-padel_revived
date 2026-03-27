@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>JUEZ PADEL PRO - V7</title>
+    <title>JUEZ PADEL PRO - V8</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
     <style>
@@ -13,10 +13,13 @@
         .config-regla { background: #333; color: #fff; border: 2px solid #555; padding: 8px; border-radius: 5px; font-size: 11px; font-weight: bold; cursor: pointer; }
         .config-regla.activo { background: #ccff00; color: #000; border-color: #ccff00; }
         .config-regla.oro-activo { background: #ffcc00; color: #000; border-color: #ffcc00; }
+        
         .zona-tiempos { display: flex; justify-content: space-around; background: #111; padding: 10px; border-radius: 10px; margin-bottom: 10px; border: 1px solid #333; }
-        .timer-box { display: flex; flex-direction: column; align-items: center; gap: 5px; }
-        .timer-val { font-family: monospace; font-size: 22px; color: #ccff00; font-weight: bold; }
-        .btn-timer { font-size: 9px; padding: 5px; background: #444; color: white; border: none; border-radius: 3px; cursor: pointer; }
+        .timer-box { display: flex; flex-direction: column; align-items: center; gap: 3px; }
+        .timer-label { font-size: 9px; color: #aaa; font-weight: bold; text-transform: uppercase; }
+        .timer-val { font-family: monospace; font-size: 20px; color: #ccff00; font-weight: bold; }
+        .btn-timer { font-size: 9px; padding: 4px; background: #444; color: white; border: none; border-radius: 3px; cursor: pointer; }
+        
         .tablero-juez { display: flex; flex-direction: column; gap: 10px; height: 50vh; }
         .equipo-juez { background: #111; border: 2px solid #333; border-radius: 15px; padding: 10px; flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: space-between; position: relative; }
         .color-picker { position: absolute; top: 10px; right: 10px; width: 25px; height: 25px; border-radius: 50%; border: 2px solid white; cursor: pointer; }
@@ -27,6 +30,7 @@
         .btn-punto { background: #c6a052; color: #000; }
         .btn-saque { background: #333; color: #ccff00; border: 1px solid #ccff00; }
         .btn-saque.activo { background: #ccff00; color: #000; }
+        
         .aviso-cambio { background: rgba(255, 204, 0, 0.95); color: #000; padding: 15px; font-weight: bold; border-radius: 10px; position: absolute; top: 10px; left: 10px; width: calc(100% - 20px); z-index: 100; display: none; cursor: pointer; border: 2px solid #fff; }
         .btn-reset-full { background: #800; color: white; border: 2px solid #f00; padding: 15px; border-radius: 10px; font-weight: bold; cursor: pointer; width: 100%; margin-top: 20px; font-size: 16px; text-transform: uppercase; }
     </style>
@@ -44,6 +48,7 @@
 
     <div class="zona-tiempos">
         <div class="timer-box">
+            <span class="timer-label">CALENTAMIENTO</span>
             <span id="disp-peloteo" class="timer-val">05:00</span>
             <div style="display:flex; gap:2px">
                 <button class="btn-timer" onclick="toggleTimer('peloteo')">PLAY</button>
@@ -52,6 +57,7 @@
             </div>
         </div>
         <div class="timer-box">
+            <span class="timer-label">DURACIÓN PARTIDO</span>
             <span id="disp-partido" class="timer-val">00:00:00</span>
             <div style="display:flex; gap:2px">
                 <button class="btn-timer" onclick="toggleTimer('partido')">PLAY</button>
@@ -64,6 +70,7 @@
         <div class="equipo-juez">
             <input type="color" class="color-picker" id="colA" value="#d32f2f" onchange="render()">
             <div class="nombre-eq" onclick="cambiarNombre(0)" id="nA">EQUIPO A</div>
+            <div style="font-size: 10px; color: #aaa; font-weight: bold;">PUNTOS</div>
             <div class="puntos-juez" id="pA">0</div>
             <div class="zona-controles">
                 <button class="btn-accion btn-punto" onclick="sumar(0)">+ PUNTO</button>
@@ -73,6 +80,7 @@
         <div class="equipo-juez">
             <input type="color" class="color-picker" id="colB" value="#d32f2f" onchange="render()">
             <div class="nombre-eq" onclick="cambiarNombre(1)" id="nB">EQUIPO B</div>
+            <div style="font-size: 10px; color: #aaa; font-weight: bold;">PUNTOS</div>
             <div class="puntos-juez" id="pB">0</div>
             <div class="zona-controles">
                 <button class="btn-accion btn-punto" onclick="sumar(1)">+ PUNTO</button>
@@ -137,30 +145,18 @@
         historialSets[eq][setActualIdx]++;
         let gA=historialSets[0][setActualIdx], gB=historialSets[1][setActualIdx];
         let totalGames = gA + gB;
-        
-        // REGLA 2: Solo cambio de lado sin descanso en el primer game
-        if(totalGames === 1 && setActualIdx === 0) {
-            dispararAviso("SOLO CAMBIO DE LADO", 5); 
-        } 
-        // REGLA 3: Si termina el set
+        if(totalGames === 1 && setActualIdx === 0) dispararAviso("SOLO CAMBIO DE LADO", 5); 
         else if((gA>=6||gB>=6) && Math.abs(gA-gB)>=2 || (modo === "TIE-BREAK")) {
             let msg = (totalGames % 2 !== 0) ? "SET Y CAMBIO DE LADO" : "SET";
-            dispararAviso(msg, 120);
-            ganarS();
+            dispararAviso(msg, 120); ganarS();
         }
-        // Cambio de lado normal
-        else if(totalGames % 2 !== 0) {
-            dispararAviso("CAMBIO DE LADO", 90);
-        }
-
+        else if(totalGames % 2 !== 0) dispararAviso("CAMBIO DE LADO", 90);
         if(gA===limiteTB && gB===limiteTB) modo="TIE-BREAK";
         if(saqueEquipo!==-1) saqueEquipo=saqueEquipo===0?1:0;
     }
 
     function dispararAviso(mensaje, segundos) {
-        cambioVisible = true;
-        segDescanso = segundos;
-        runDescanso = true;
+        cambioVisible = true; segDescanso = segundos; runDescanso = true;
         document.getElementById('msg-descanso').innerText = mensaje;
         document.getElementById('reloj-descanso').innerText = segundos;
         document.getElementById('cambio-lado').style.display = "block";
