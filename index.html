@@ -2,30 +2,43 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>TV DISPLAY - V16 PRO</title>
+    <title>TV DISPLAY - V17 POSICIONES</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
     <style>
         body { margin: 0; background: #000; font-family: 'Segoe UI', sans-serif; color: #fff; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; overflow: hidden; }
         
-        /* Contenedor Superior de Avisos y Tiempos */
-        .header-status { width: 950px; display: flex; align-items: flex-end; gap: 10px; margin-bottom: 10px; height: 60px; }
+        /* Contenedor Superior de Referencia */
+        .header-status { width: 950px; display: flex; align-items: flex-end; position: relative; height: 70px; margin-bottom: 5px; }
 
-        .timer-tv { background: #111; padding: 5px 15px; border-radius: 6px; border: 1px solid #333; text-align: center; min-width: 140px; }
+        /* 1. RELOJ (Izquierda) */
+        .timer-tv { background: #111; padding: 5px 15px; border-radius: 6px; border: 1px solid #333; text-align: center; width: 150px; z-index: 10; }
         .t-lab { font-size: 9px; color: #aaa; text-transform: uppercase; font-weight: bold; display: block; }
         .t-val { font-size: 24px; color: #ccff00; font-family: monospace; font-weight: bold; }
 
-        /* Anuncio Tie-Break (Estilo similar al reloj) */
-        #aviso-tiebreak { background: #d32f2f; padding: 5px 15px; border-radius: 6px; border: 1px solid #f00; text-align: center; min-width: 120px; display: none; animation: blink 1s infinite; }
-        .tb-txt { font-size: 18px; font-weight: 900; color: #fff; line-height: 40px; }
-
-        /* Anuncio Cambio de Lado Superior */
-        #aviso-tv-top { flex-grow: 1; background: #ffcc00; color: #000; border-radius: 6px; display: none; align-items: center; justify-content: center; gap: 15px; padding: 0 20px; height: 52px; border: 2px solid #fff; }
+        /* 2. CAMBIO DE LADO (Desde reloj hasta fin de Set 3) 
+           Ancho calculado: Reloj(150) + Margen(10) + Columnas Set (90*3) = aprox 430px adicionales */
+        #aviso-tv-top { 
+            position: absolute; left: 160px; /* Inicia después del reloj */
+            width: 625px; /* Cubre hasta el final del Set 3 */
+            background: #ffcc00; color: #000; border-radius: 6px; 
+            display: none; align-items: center; justify-content: center; 
+            gap: 20px; height: 52px; border: 2px solid #fff; z-index: 5;
+        }
         .msg-top { font-size: 18px; font-weight: 900; text-transform: uppercase; }
         .desc-top { font-size: 32px; font-family: monospace; font-weight: 900; }
 
-        /* Marcador */
-        #scoreboard { width: 950px; background: #0a0a20; border: 3px solid #333; position: relative; }
+        /* 3. TIE-BREAK (Arriba de Puntos - Extrema derecha) */
+        #aviso-tiebreak { 
+            position: absolute; right: 0; 
+            width: 160px; /* Mismo ancho que la columna de puntos */
+            background: #d32f2f; border-radius: 6px; border: 1px solid #f00; 
+            text-align: center; display: none; height: 52px; align-items: center; justify-content: center;
+        }
+        .tb-txt { font-size: 16px; font-weight: 900; color: #fff; text-transform: uppercase; }
+
+        /* MARCADOR */
+        #scoreboard { width: 950px; background: #0a0a20; border: 3px solid #333; }
         .labels-row { display: flex; background: rgba(255,255,255,0.05); font-size: 14px; color: #aaa; font-weight: bold; border-bottom: 2px solid #333; }
         .label-equipo { flex-grow: 1; padding: 10px 25px; }
         .label-box { width: 90px; text-align: center; padding: 10px 0; border-left: 1px solid #333; }
@@ -42,7 +55,6 @@
         
         .bola { width: 20px; height: 20px; background: #ccff00; border-radius: 50%; margin-left: 15px; display: none; box-shadow: 0 0 15px #ccff00; }
         
-        @keyframes blink { 0% { opacity: 1; } 50% { opacity: 0.7; } 100% { opacity: 1; } }
         .oro-anim { animation: flash-gold 0.8s infinite alternate; }
         @keyframes flash-gold { from { background: #c6a052; } to { background: #fff; } }
     </style>
@@ -96,6 +108,8 @@
 
     db.ref("marcador/tiempos").on("value", (snap) => {
         const t = snap.val(); if(!t) return;
+        
+        // Reloj
         if(t.vPel) { 
             document.getElementById('label-timer').innerText = "PELOTEO"; 
             document.getElementById('val-timer').innerText = t.tPel; 
@@ -104,7 +118,7 @@
             document.getElementById('val-timer').innerText = t.tPar; 
         }
         
-        // Aviso Cambio de Lado Superior
+        // Notificación Cambio de Lado (Superior Centro-Izquierda)
         const avisoTop = document.getElementById('aviso-tv-top');
         if(t.vDesc && t.tDesc > 0) {
             avisoTop.style.display = 'flex';
@@ -113,8 +127,8 @@
             avisoTop.style.display = 'none';
         }
 
-        // Anuncio Tie-Break Superior
-        document.getElementById('aviso-tiebreak').style.display = t.tiebreak ? 'block' : 'none';
+        // Notificación Tie-Break (Sobre columna Puntos)
+        document.getElementById('aviso-tiebreak').style.display = t.tiebreak ? 'flex' : 'none';
     });
 
     db.ref("marcador/actual").on("value", (snap) => {
