@@ -200,14 +200,16 @@
             } else {
                 avisoFinalTop.style.display = 'none';
 
-                // LÓGICA DE DESCANSO / CAMBIO DE SET
+                // LÓGICA DE DESCANSO / CAMBIO DE SET REGLAMENTARIA
                 if(t.vDesc && t.tDesc > 0) { 
                     avisoTopCambio.style.display = 'flex'; 
                     document.getElementById('descanso-tv-q').innerText = t.tDesc;
                     
-                    // Si la suma es impar es CAMBIO, si es par es FIN DE SET
+                    // CORRECCIÓN REGLAMENTARIA:
+                    // Suma impar = SET Y CAMBIO (120s)
+                    // Suma par = FIN DE SET (120s, mismo lado)
                     if (t.sumJuegos % 2 !== 0) {
-                        document.getElementById('msg-tv-desc').innerText = "CAMBIO";
+                        document.getElementById('msg-tv-desc').innerText = "SET Y CAMBIO";
                     } else {
                         document.getElementById('msg-tv-desc').innerText = "FIN DE SET";
                     }
