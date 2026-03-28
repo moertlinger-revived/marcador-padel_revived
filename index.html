@@ -107,7 +107,7 @@
 <body>
 
     <div class="brand-header">
-        <div class="title-main">PADEL VIVO <span style="color:#444">| LIVE STREAM</span></div>
+        <div class="title-main">REVIVED <span style="color:#444">| LIVE SCORE</span></div>
         <img src="https://lh3.googleusercontent.com/u/0/d/1Sbun1g6OMSdNtM-6arDu5XUxH-NbLwwP" class="logo-top">
     </div>
 
@@ -200,18 +200,21 @@
             } else {
                 avisoFinalTop.style.display = 'none';
 
-                // LÓGICA DE DESCANSO / CAMBIO DE SET REGLAMENTARIA
+                // LÓGICA DE DESCANSO CORREGIDA
                 if(t.vDesc && t.tDesc > 0) { 
                     avisoTopCambio.style.display = 'flex'; 
                     document.getElementById('descanso-tv-q').innerText = t.tDesc;
                     
-                    // CORRECCIÓN REGLAMENTARIA:
-                    // Suma impar = SET Y CAMBIO (120s)
-                    // Suma par = FIN DE SET (120s, mismo lado)
-                    if (t.sumJuegos % 2 !== 0) {
-                        document.getElementById('msg-tv-desc').innerText = "SET Y CAMBIO";
+                    if (t.isFinSet) {
+                        // SI ES FINAL DE SET: Se aplica par/impar
+                        if (t.sumJuegos % 2 !== 0) {
+                            document.getElementById('msg-tv-desc').innerText = "SET Y CAMBIO";
+                        } else {
+                            document.getElementById('msg-tv-desc').innerText = "FIN DE SET";
+                        }
                     } else {
-                        document.getElementById('msg-tv-desc').innerText = "FIN DE SET";
+                        // SI NO ES FINAL DE SET: Solo es cambio normal (juegos impares durante el set)
+                        document.getElementById('msg-tv-desc').innerText = "CAMBIO";
                     }
                 } else { 
                     avisoTopCambio.style.display = 'none'; 
