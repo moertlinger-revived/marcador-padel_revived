@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>JUEZ PADEL PRO - V28 STB 10/11</title>
+    <title>JUEZ PADEL PRO - V31 FINAL</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
     <style>
@@ -47,7 +47,7 @@
         <div class="timer-box">
             <span class="timer-label">CALENTAMIENTO</span>
             <span id="disp-peloteo" class="timer-val">05:00</span>
-            <div><button class="btn-t" onclick="toggleTimer('peloteo')">PLAY</button><button class="btn-t" onclick="resetTimer('peloteo')">RESET</button><button class="btn-t" onclick="toggleVisPeloteo()">👁️</button></div>
+            <div><button class="btn-t" onclick="toggleTimer('peloteo')">PLAY</button><button class="btn-t" onclick="resetTimer('peloteo')">RESET</button></div>
         </div>
         <div class="timer-box">
             <span class="timer-label">TIEMPO PARTIDO</span>
@@ -75,58 +75,32 @@
     const firebaseConfig = { apiKey: "AIzaSyCQkDrlFCRKMYDxM54dkl24hGu-e-ZdbMs", databaseURL: "https://padel-vivo-default-rtdb.firebaseio.com", projectId: "padel-vivo" };
     firebase.initializeApp(firebaseConfig); const db = firebase.database();
 
-    // modoSTB: 0 = Normal, 1 = STB 10 pts, 2 = STB 11 pts
-    let pts = [0,0], historialSets = [[0,0,0], [0,0,0]], setActualIdx = 0, modo = "NORMAL", limiteTB = 6, puntoOroActivo = false, modoSTB = 0;
-    let saqueJugadorIdx = -1, proximoSacadorEq = [0, 2], stack = [];
-    let segP = 0, segPel = 300, runP = false, runPel = false, visPel = true;
-    let segDescanso = 0, runDescanso = false, cambioVisible = false;
+    let pts = [0,0], historialSets = [[0,0,0], [0,0,0]], setActualIdx = 0, modo = "NORMAL", limiteTB = 6, puntoOroActivo = false, modoSTB = 0, finalizado = false;
+    let saqueJugadorIdx = -1, proximoSacadorEq = [0, 2], stack = [], segP = 0, segPel = 300, runP = false, runPel = false, visPel = true, segDescanso = 0, runDescanso = false;
 
     setInterval(() => {
         if(runP) segP++;
         if(runPel && segPel > 0) segPel--;
-        if(runDescanso && segDescanso > 0) {
-            segDescanso--;
-            document.getElementById('reloj-descanso').innerText = segDescanso;
-        } else if(segDescanso === 0 && runDescanso) { aceptarCambio(); }
-        actualizarDisplaysTiempos();
-        enviarTiemposFirebase();
+        if(runDescanso && segDescanso > 0) { segDescanso--; document.getElementById('reloj-descanso').innerText = segDescanso; }
+        else if(segDescanso === 0 && runDescanso) { aceptarCambio(); }
+        enviarTiempos();
     }, 1000);
 
-    function actualizarDisplaysTiempos() {
+    function enviarTiempos() {
         let h=Math.floor(segP/3600).toString().padStart(2,'0'), m=Math.floor((segP%3600)/60).toString().padStart(2,'0'), s=(segP%60).toString().padStart(2,'0');
         let pm=Math.floor(segPel/60).toString().padStart(2,'0'), ps=(segPel%60).toString().padStart(2,'0');
         document.getElementById('disp-partido').innerText = `${h}:${m}:${s}`;
         document.getElementById('disp-peloteo').innerText = `${pm}:${ps}`;
+        db.ref("marcador/tiempos").set({ tPar:`${h}:${m}:${s}`, tPel:`${pm}:${ps}`, vPel:visPel, tDesc:segDescanso, vDesc:runDescanso, tiebreak:(modo==="TIE-BREAK") });
     }
-
-    function enviarTiemposFirebase() {
-        let h=Math.floor(segP/3600).toString().padStart(2,'0'), m=Math.floor((segP%3600)/60).toString().padStart(2,'0'), s=(segP%60).toString().padStart(2,'0');
-        let pm=Math.floor(segPel/60).toString().padStart(2,'0'), ps=(segPel%60).toString().padStart(2,'0');
-        db.ref("marcador/tiempos").set({ tPar:`${h}:${m}:${s}`, tPel:`${pm}:${ps}`, vPel:visPel, tDesc:segDescanso, vDesc:cambioVisible, tiebreak:(modo==="TIE-BREAK") });
-    }
-
-    function guardarLocal() {
-        const estado = { pts, historialSets, setActualIdx, modo, limiteTB, puntoOroActivo, modoSTB, saqueJugadorIdx, proximoSacadorEq, stack, segP, n0:document.getElementById('n0').innerText, n1:document.getElementById('n1').innerText, n2:document.getElementById('n2').innerText, n3:document.getElementById('n3').innerText };
-        localStorage.setItem('padel_pro_backup', JSON.stringify(estado));
-    }
-
-    function cargarLocal() {
-        const backup = localStorage.getItem('padel_pro_backup');
-        if (backup) {
-            const e = JSON.parse(backup);
-            pts=e.pts; historialSets=e.historialSets; setActualIdx=e.setActualIdx; modo=e.modo; limiteTB=e.limiteTB; puntoOroActivo=e.puntoOroActivo; modoSTB=e.modoSTB||0; saqueJugadorIdx=e.saqueJugadorIdx; proximoSacadorEq=e.proximoSacadorEq; stack=e.stack||[]; segP=e.segP||0;
-            document.getElementById('n0').innerText=e.n0; document.getElementById('n1').innerText=e.n1; document.getElementById('n2').innerText=e.n2; document.getElementById('n3').innerText=e.n3;
-            render();
-        }
-    }
-
-    function resetTotal() { if(confirm("¿RESET TOTAL?")) { localStorage.removeItem('padel_pro_backup'); db.ref("marcador").remove(); location.reload(); } }
 
     function sumar(eq) {
-        stack.push(JSON.stringify({pts:[...pts], h:[[...historialSets[0]],[...historialSets[1]]], sIdx:setActualIdx, m:modo, sq:saqueJugadorIdx, pS:[...proximoSacadorEq], oro: puntoOroActivo, lim: limiteTB, mstb: modoSTB}));
+        if(finalizado) return;
+        stack.push(JSON.stringify({pts:[...pts], h:[[...historialSets[0]],[...historialSets[1]]], sIdx:setActualIdx, m:modo, sq:saqueJugadorIdx, pS:[...proximoSacadorEq], oro: puntoOroActivo, mstb: modoSTB, f: finalizado, rP: runP}));
+        
         if(!runP && !visPel) runP = true;
         let ot = eq === 0 ? 1 : 0;
-        
+
         if(modo === "NORMAL") {
             if(pts[eq]<3) pts[eq]++;
             else if(pts[eq]===3 && pts[ot]<3) { pts=[0,0]; ganarG(eq); }
@@ -135,98 +109,91 @@
             else if(pts[eq]===4) { pts=[0,0]; ganarG(eq); }
         } else {
             pts[eq]++;
-            if((pts[0] + pts[1]) % 6 === 0) dispararAviso("CAMBIO DE LADO (TB)", 10);
-            if((pts[0]+pts[1]) % 2 !== 0) rotarSaqueTB();
-            
-            // Meta dinámica: 11 si modoSTB es 2, 10 si modoSTB es 1, 7 si es TB normal
+            if((pts[0]+pts[1])%6===0) dispararAviso("CAMBIO LADO TB", 10);
+            if((pts[0]+pts[1])%2!==0) rotarSaqueTB();
+
             let meta = 7;
             if(setActualIdx === 2) {
                 if(modoSTB === 1) meta = 10;
                 else if(modoSTB === 2) meta = 11;
             }
-            
-            if(pts[eq]>=meta && (pts[eq]-pts[ot])>=2) { pts=[0,0]; ganarG(eq); }
+
+            if(pts[eq] >= meta && (pts[eq] - pts[ot]) >= 2) {
+                if(setActualIdx === 2 && modoSTB > 0) {
+                    historialSets[eq][2] = 7; historialSets[ot][2] = 6;
+                    finalizado = true; runP = false; pts = [0,0];
+                    dispararAviso("PARTIDO FINALIZADO (STB)", 300);
+                } else {
+                    pts = [0,0]; ganarG(eq);
+                }
+            }
         }
         render();
     }
 
     function ganarG(eq) {
+        let ot = eq === 0 ? 1 : 0;
         historialSets[eq][setActualIdx]++;
         let gA = historialSets[0][setActualIdx], gB = historialSets[1][setActualIdx];
-        let totalG = gA + gB;
-        
-        if(saqueJugadorIdx === 0 || saqueJugadorIdx === 1) proximoSacadorEq[0] = (saqueJugadorIdx === 0) ? 1 : 0;
-        else if(saqueJugadorIdx === 2 || saqueJugadorIdx === 3) proximoSacadorEq[1] = (saqueJugadorIdx === 2) ? 3 : 2;
-        let siguienteEq = (saqueJugadorIdx < 2) ? 1 : 0;
-        saqueJugadorIdx = (siguienteEq === 0) ? proximoSacadorEq[0] : proximoSacadorEq[1];
 
-        if(totalG === 1 && modo === "NORMAL") dispararAviso("SOLO CAMBIO DE LADO", 10);
-        else if((gA>=6||gB>=6) && Math.abs(gA-gB)>=2 || modo==="TIE-BREAK") { 
-            dispararAviso((totalG % 2 !== 0) ? "SET Y CAMBIO" : "SET FINALIZADO", 120); 
-            ganarS(); 
+        let setsA = 0, setsB = 0;
+        for(let i=0; i<3; i++) {
+            if(historialSets[0][i] > historialSets[1][i] && historialSets[0][i]>=6) setsA++;
+            if(historialSets[1][i] > historialSets[0][i] && historialSets[1][i]>=6) setsB++;
         }
-        else if(totalG % 2 !== 0) dispararAviso("CAMBIO DE LADO", 90);
-        
-        if(gA === limiteTB && gB === limiteTB) modo = "TIE-BREAK";
+
+        if(setsA === 2 || setsB === 2) {
+            finalizado = true; runP = false;
+            dispararAviso("PARTIDO FINALIZADO", 300);
+        } else if((gA >= 6 || gB >= 6) && Math.abs(gA - gB) >= 2 || modo === "TIE-BREAK") {
+            dispararAviso("SET Y CAMBIO", 120); ganarS();
+        } else {
+            if((gA + gB) % 2 !== 0) dispararAviso("CAMBIO LADO", 90);
+            if(gA === limiteTB && gB === limiteTB) modo = "TIE-BREAK";
+        }
+        rotarSaqueNormal();
     }
 
-    function ganarS() { 
-        if(setActualIdx < 2) { 
-            setActualIdx++; 
-            pts=[0,0]; 
-            // Si hay STB (10 o 11), entramos directo a TIE-BREAK al iniciar el 3er set
-            if(setActualIdx === 2 && modoSTB > 0) {
-                modo = "TIE-BREAK";
-            } else {
-                modo = "NORMAL";
-            }
-            render(); 
-        } 
+    function ganarS() { if(setActualIdx < 2) { setActualIdx++; modo=(setActualIdx===2 && modoSTB>0)?"TIE-BREAK":"NORMAL"; pts=[0,0]; } }
+    function rotarSaqueNormal() { 
+        let sigEq = (saqueJugadorIdx < 2) ? 1 : 0;
+        if(saqueJugadorIdx===0||saqueJugadorIdx===1) proximoSacadorEq[0]=(saqueJugadorIdx===0)?1:0;
+        else if(saqueJugadorIdx===2||saqueJugadorIdx===3) proximoSacadorEq[1]=(saqueJugadorIdx===2)?3:2;
+        saqueJugadorIdx = (sigEq===0)?proximoSacadorEq[0]:proximoSacadorEq[1];
     }
-
-    function cicloSTB() { 
-        modoSTB = (modoSTB + 1) % 3; // 0 -> 1 -> 2 -> 0
-        render(); 
-    }
-
-    function dispararAviso(msg, seg) { cambioVisible = true; segDescanso = seg; runDescanso = true; document.getElementById('msg-descanso').innerText = msg; document.getElementById('cambio-lado').style.display = "block"; }
-    function aceptarCambio() { cambioVisible = false; runDescanso = false; document.getElementById('cambio-lado').style.display = "none"; render(); }
+    function rotarSaqueTB() { if(saqueJugadorIdx < 2) { saqueJugadorIdx = proximoSacadorEq[1]; proximoSacadorEq[1] = (proximoSacadorEq[1] === 2) ? 3 : 2; } else { saqueJugadorIdx = proximoSacadorEq[0]; proximoSacadorEq[0] = (proximoSacadorEq[0] === 0) ? 1 : 0; } }
+    function cicloSTB() { modoSTB = (modoSTB + 1) % 3; render(); }
     function toggleTimer(t) { if(t==='partido') runP=!runP; else runPel=!runPel; }
     function resetTimer(t) { if(t==='peloteo') segPel=300; }
-    function toggleVisPeloteo() { visPel = !visPel; render(); }
-    function rotarSaqueTB() { if(saqueJugadorIdx < 2) { saqueJugadorIdx = proximoSacadorEq[1]; proximoSacadorEq[1] = (proximoSacadorEq[1] === 2) ? 3 : 2; } else { saqueJugadorIdx = proximoSacadorEq[0]; proximoSacadorEq[0] = (proximoSacadorEq[0] === 0) ? 1 : 0; } }
-    function deshacer() { if(stack.length > 0) { let e = JSON.parse(stack.pop()); pts=e.pts; historialSets=e.h; setActualIdx=e.sIdx; modo=e.m; saqueJugadorIdx=e.sq; proximoSacadorEq=e.pS; puntoOroActivo=e.oro; limiteTB=e.lim; modoSTB=e.mstb; render(); } }
     function togglePuntoOro() { puntoOroActivo = !puntoOroActivo; render(); }
     function cambiarReglaTB() { limiteTB = (limiteTB === 6) ? 5 : 6; render(); }
     function definirSaque(idx) { saqueJugadorIdx = idx; render(); }
     function cambiarNombre(i) { let n = prompt("Nombre:"); if(n) document.getElementById('n'+i).innerText = n.toUpperCase(); render(); }
-
+    function dispararAviso(m, s) { runDescanso=true; segDescanso=s; document.getElementById('msg-descanso').innerText=m; document.getElementById('cambio-lado').style.display="block"; }
+    function aceptarCambio() { runDescanso=false; document.getElementById('cambio-lado').style.display="none"; render(); }
+    function resetTotal() { if(confirm("¿RESET TOTAL?")) { localStorage.clear(); db.ref("marcador").remove(); location.reload(); } }
+    function deshacer() { if(stack.length>0) { let e=JSON.parse(stack.pop()); pts=e.pts; historialSets=e.h; setActualIdx=e.sIdx; modo=e.m; saqueJugadorIdx=e.sq; proximoSacadorEq=e.pS; puntoOroActivo=e.oro; modoSTB=e.mstb; finalizado=e.f; runP=e.rP; render(); } }
+    function guardarLocal() { localStorage.setItem('padel_pro_v31', JSON.stringify({pts, historialSets, setActualIdx, modo, modoSTB, finalizado, saqueJugadorIdx, proximoSacadorEq, segP, names:[document.getElementById('n0').innerText,document.getElementById('n1').innerText,document.getElementById('n2').innerText,document.getElementById('n3').innerText]})); }
+    function cargarLocal() { 
+        let b = JSON.parse(localStorage.getItem('padel_pro_v31')); 
+        if(b) { 
+            pts=b.pts; historialSets=b.historialSets; setActualIdx=b.setActualIdx; modo=b.modo; modoSTB=b.modoSTB; finalizado=b.finalizado; saqueJugadorIdx=b.saqueJugadorIdx; proximoSacadorEq=b.proximoSacadorEq; segP=b.segP;
+            b.names.forEach((n,i) => document.getElementById('n'+i).innerText=n); render();
+        }
+    }
     function render() {
         const l = ["0","15","30","40","Ad"];
         document.getElementById('pA').innerText = modo==="NORMAL" ? l[pts[0]] : pts[0];
         document.getElementById('pB').innerText = modo==="NORMAL" ? l[pts[1]] : pts[1];
-        
-        let txtSTB = "3er SET: NORMAL";
-        if(modoSTB === 1) txtSTB = "3er SET: STB (10)";
-        else if(modoSTB === 2) txtSTB = "3er SET: STB (11)";
-        
-        document.getElementById('btn-stb').innerText = txtSTB;
-        document.getElementById('btn-stb').className = "config-regla" + (modoSTB > 0 ? " activo" : "");
-        
-        document.getElementById('btn-oro').innerText = "ORO: " + (puntoOroActivo ? "SÍ" : "NO");
-        document.getElementById('btn-oro').className = "config-regla" + (puntoOroActivo ? " activo" : "");
-        document.getElementById('btn-regla').innerText = "TB: " + limiteTB + "-" + limiteTB;
-        document.getElementById('btn-regla').className = "config-regla" + (limiteTB === 5 ? " activo" : "");
-        
-        for(let i=0; i<4; i++) {
-            document.getElementById(`btn-s${i}`).classList.toggle('activo', saqueJugadorIdx === i);
-            document.getElementById(`f-j${i}`).classList.toggle('sirviendo', saqueJugadorIdx === i);
+        document.getElementById('btn-stb').innerText = "3er SET: " + (modoSTB===0?"NORMAL":modoSTB===1?"STB(10)":"STB(11)");
+        document.getElementById('btn-stb').classList.toggle('activo', modoSTB>0);
+        document.getElementById('btn-oro').innerText = "ORO: " + (puntoOroActivo?"SÍ":"NO");
+        document.getElementById('btn-oro').classList.toggle('activo', puntoOroActivo);
+        for(let i=0; i<4; i++) { 
+            document.getElementById(`f-j${i}`).classList.toggle('sirviendo', saqueJugadorIdx===i); 
+            document.getElementById(`btn-s${i}`).style.background = (saqueJugadorIdx===i)?"#ccff00":"#444";
         }
-        db.ref("marcador/actual").set({
-            n0: document.getElementById('n0').innerText, n1: document.getElementById('n1').innerText, n2: document.getElementById('n2').innerText, n3: document.getElementById('n3').innerText,
-            h0: historialSets[0], h1: historialSets[1], p0: document.getElementById('pA').innerText, p1: document.getElementById('pB').innerText,
-            sIdx: saqueJugadorIdx, modo: modo, oro: (puntoOroActivo && pts[0]===3 && pts[1]===3), msg: document.getElementById('msg-descanso').innerText
-        });
+        db.ref("marcador/actual").set({ n0:document.getElementById('n0').innerText, n1:document.getElementById('n1').innerText, n2:document.getElementById('n2').innerText, n3:document.getElementById('n3').innerText, h0:historialSets[0], h1:historialSets[1], p0:document.getElementById('pA').innerText, p1:document.getElementById('pB').innerText, sIdx:saqueJugadorIdx, modo:modo, oro:(puntoOroActivo && pts[0]===3 && pts[1]===3), finalizado:finalizado });
         guardarLocal();
     }
 </script>
