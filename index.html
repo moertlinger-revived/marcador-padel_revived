@@ -2,14 +2,13 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Display PADEL VIVO - High Visibility</title>
+    <title>Display PADEL VIVO - High Visibility V48.2</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
     <style>
         /* CONFIGURACIÓN ESTRUCTURAL */
         body { margin: 0; background: #000; font-family: 'Segoe UI', sans-serif; color: #fff; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
 
-        /* ENCABEZADO - Se mantiene elegante y fino */
         .brand-header { 
             width: 100%; height: 60px; display: flex; align-items: center; justify-content: space-between; 
             padding: 0 40px; box-sizing: border-box; border-bottom: 2px solid #333; background: #0a0a0a; 
@@ -17,13 +16,8 @@
         .title-main { font-size: 20px; font-weight: 900; color: #ccff00; text-transform: uppercase; letter-spacing: 2px; }
         .logo-top { height: 40px; object-fit: contain; }
 
-        /* CONTENEDOR CENTRAL - Maximizado */
-        .main-content { 
-            flex-grow: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; width: 100%; 
-            padding: 10px 0;
-        }
+        .main-content { flex-grow: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; width: 100%; padding: 10px 0; }
 
-        /* BARRA DE ESTADO - Más compacta para dar espacio al tablero */
         .header-status { width: 95%; max-width: 1200px; display: flex; align-items: center; margin-bottom: 10px; gap: 20px; }
         .timer-tv { background: #111; padding: 5px 25px; border-radius: 8px; border: 1px solid #444; }
         .t-label { font-size: 11px; color: #aaa; font-weight: 900; text-transform: uppercase; }
@@ -32,60 +26,62 @@
         #aviso-tv-top { background: #ffcc00; color: #000; border-radius: 8px; display: none; align-items: center; justify-content: center; gap: 15px; height: 55px; padding: 0 20px; border: 3px solid #fff; }
         .msg-top { font-size: 22px; font-weight: 900; text-transform: uppercase; }
         
-        /* TABLERO GIGANTE - Aumentado el ancho a 1200px para visibilidad remota */
+        /* --- PASO 1: ESTILO AVISO PUNTO DE ORO --- */
+        #aviso-oro {
+            background: #222; /* Fondo gris oscuro */
+            color: #ccff00;   /* Fuente amarilla */
+            border: 2px solid #444;
+            border-radius: 8px;
+            padding: 0 30px;
+            height: 55px;
+            display: none;    /* Se activa por JS */
+            align-items: center;
+            justify-content: center;
+            font-size: 28px;
+            font-weight: 900;
+            text-transform: uppercase;
+            animation: titilar 0.6s infinite alternate; /* Efecto titilando */
+        }
+
+        @keyframes titilar {
+            from { opacity: 1; }
+            to { opacity: 0.2; }
+        }
+
         #scoreboard { 
-            width: 95%; 
-            max-width: 1200px; 
-            background: #050515; 
-            border: 5px solid #333; 
-            border-radius: 12px; 
-            overflow: hidden; 
-            position: relative; 
-            box-shadow: 0 0 50px rgba(0,0,0,1);
+            width: 95%; max-width: 1200px; background: #050515; border: 5px solid #333; 
+            border-radius: 12px; overflow: hidden; position: relative; box-shadow: 0 0 50px rgba(0,0,0,1);
         }
 
         .labels-row { display: flex; background: rgba(255,255,255,0.05); font-size: 18px; color: #888; font-weight: bold; border-bottom: 3px solid #333; }
         .label-equipo { flex-grow: 1; padding: 10px 30px; }
         .label-box { width: 110px; text-align: center; padding: 10px 0; border-left: 2px solid #333; }
         
-        /* FILAS DE EQUIPO - Más altas (160px) */
         .equipo-block { display: flex; border-bottom: 10px solid #333; height: 160px; }
         .equipo-block:last-child { border-bottom: none; }
         .nombres-col { flex-grow: 1; display: flex; flex-direction: column; justify-content: center; background: #020208; gap: 10px; }
         
-        /* NOMBRES GIGANTES */
         .name-cell { font-size: 38px; font-weight: 900; text-transform: uppercase; padding-left: 30px; display: flex; align-items: center; gap: 20px; letter-spacing: -1px; }
         
-        /* CAJAS DE SETS - Más grandes */
         .box { width: 110px; display: flex; justify-content: center; align-items: center; font-size: 75px; font-weight: 900; border-left: 2px solid #333; background: #0a0a0a; }
         
-        /* PUNTOS - Impacto Visual Máximo */
         .pts-cell { 
-            width: 220px; 
-            display: flex; 
-            justify-content: center; 
-            align-items: center; 
-            font-size: 115px; /* Tamaño masivo para ver desde lejos */
-            font-weight: 900; 
-            background: #c6a052; 
-            color: #000; 
-            border-left: 5px solid #333; 
+            width: 220px; display: flex; justify-content: center; align-items: center; font-size: 115px; 
+            font-weight: 900; background: #c6a052; color: #000; border-left: 5px solid #333; 
             text-shadow: 2px 2px 0px rgba(255,255,255,0.2);
         }
         .pts-cell.modo-tb { background: #111 !important; color: #c6a052 !important; font-size: 90px; }
         
-        /* Pelota de Saque - Más visible */
-        .bola { width: 28px; height: 28px; background: #ccff00; border-radius: 50%; box-shadow: 0 0 15px #ccff00; display: none; border: 3px solid #000; }
+        /* Pelota de Saque a la Derecha */
+        .bola { width: 28px; height: 28px; background: #ccff00; border-radius: 50%; box-shadow: 0 0 15px #ccff00; display: none; border: 3px solid #000; margin-left: 10px; }
 
-        /* PIE DE AUSPICIANTES - Elegante pero sin robar protagonismo */
         .footer-auspiciantes { 
             width: 100%; height: 90px; background: #000; 
             display: flex; justify-content: center; align-items: center; 
             gap: 80px; border-top: 2px solid #222; 
         }
-        .logo-sponsor { max-height: 100px; max-width: 200px; object-fit: contain; opacity: 0.9; }
+        .logo-sponsor { max-height: 65px; max-width: 200px; object-fit: contain; opacity: 0.9; }
 
-        /* Cartel Final Gigante */
         #cartel-final { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: #000; z-index: 100; display: none; align-items: center; justify-content: center; border: 20px solid #ccff00; }
         
         @keyframes flash-txt { from { opacity: 1; } to { opacity: 0.4; } }
@@ -94,16 +90,15 @@
 <body>
 
     <div class="brand-header">
-        <div class="title-main">revived <span style="color:#444">| PADEL SCORE</span></div>
-        <img src="https://lh3.googleusercontent.com/u/0/d/1Sbun1g6OMSdNtM-6arDu5XUxH-NbLwwP" class="logo-top">
+        <div class="title-main">PADEL VIVO <span style="color:#444">| LIVE STREAM</span></div>
+        <img src="https://drive.google.com/uc?id=1Sbun1g6OMSdNtM-6arDu5XUxH-NbLwwP" class="logo-top">
     </div>
 
     <div class="main-content">
         <div class="header-status">
             <div class="timer-tv"><span class="t-label" id="timer-title">TIEMPO PARTIDO</span><span class="t-val" id="val-timer">00:00:00</span></div>
-            <div id="aviso-tv-top"><span class="msg-top" id="msg-tv-desc">CAMBIO</span>
-                <span class="t-val" style="margin-left:10px; color: black;" id="descanso-tv-q">90</span>
-            </div>
+            <div id="aviso-tv-top"><span class="msg-top" id="msg-tv-desc">CAMBIO</span><span class="t-val" style="margin-left:10px; color: black;" id="descanso-tv-q">90</span></div>
+            <div id="aviso-oro">ORO</div>
         </div>
 
         <div id="scoreboard">
@@ -133,12 +128,10 @@
         </div>
     </div>
 
-
-
     <div class="footer-auspiciantes">
-        <img src="https://lh3.googleusercontent.com/u/0/d/1ReAjcrzOvIMdAQC4tDwUT7VazUV7bEBZ" class="logo-sponsor">
-        <img src="https://lh3.googleusercontent.com/u/0/d/17Tc3Kqi-Wjtc9S87A1TOjdPErT7o1iQa" class="logo-sponsor">
-        <img src="https://lh3.googleusercontent.com/u/0/d/1_bDoczd2TatNc0q1mZ7HDSTpMAdMzbVc" class="logo-sponsor">
+        <img src="https://via.placeholder.com/200x65/000/ccff00?text=SPONSOR+1" class="logo-sponsor">
+        <img src="https://via.placeholder.com/200x65/000/ccff00?text=SPONSOR+2" class="logo-sponsor">
+        <img src="https://via.placeholder.com/200x65/000/ccff00?text=SPONSOR+3" class="logo-sponsor">
     </div>
 
 <script>
@@ -148,7 +141,7 @@
     function updateTiempos(t) {
         if(!t) return;
         document.getElementById('val-timer').innerText = t.vPel ? t.tPel : t.tPar; 
-        document.getElementById('timer-title').innerText = t.vPel ? "CALENTAMIENTO  " : "TIEMPO PARTIDO  ";
+        document.getElementById('timer-title').innerText = t.vPel ? "CALENTAMIENTO" : "TIEMPO PARTIDO";
         const avisoTop = document.getElementById('aviso-tv-top');
         if(t.vDesc && t.tDesc > 0) { 
             avisoTop.style.display = 'flex'; 
@@ -167,6 +160,10 @@
         document.getElementById('n2').innerText=d.n2; document.getElementById('n3').innerText=d.n3;
         document.getElementById('pA').innerText=d.p0; document.getElementById('pB').innerText=d.p1;
         document.getElementById('msg-tv-desc').innerText = d.msg;
+        
+        // --- PASO 3: LÓGICA PARA MOSTRAR AVISO ORO ---
+        document.getElementById('aviso-oro').style.display = d.oro ? 'flex' : 'none';
+
         [0,1,2].forEach(i => { 
             document.getElementById(`s${i+1}-0`).innerText = d.h0[i]; 
             document.getElementById(`s${i+1}-1`).innerText = d.h1[i]; 
