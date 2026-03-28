@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Display PADEL VIVO - High Visibility V48.2</title>
+    <title>Display PADEL VIVO - High Visibility V48.3</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
     <style>
@@ -26,21 +26,22 @@
         #aviso-tv-top { background: #ffcc00; color: #000; border-radius: 8px; display: none; align-items: center; justify-content: center; gap: 15px; height: 55px; padding: 0 20px; border: 3px solid #fff; }
         .msg-top { font-size: 22px; font-weight: 900; text-transform: uppercase; }
         
-        /* --- PASO 1: ESTILO AVISO PUNTO DE ORO --- */
+        /* --- POSICIÓN CORREGIDA: PUNTO DE ORO --- */
         #aviso-oro {
+            position: absolute;
+            right: 15px;      /* Alineado a la derecha sobre la columna de puntos */
+            top: 6px;         /* Justo encima de la etiqueta "PUNTOS" */
             background: #222; /* Fondo gris oscuro */
             color: #ccff00;   /* Fuente amarilla */
             border: 2px solid #444;
-            border-radius: 8px;
-            padding: 0 30px;
-            height: 55px;
-            display: none;    /* Se activa por JS */
-            align-items: center;
-            justify-content: center;
-            font-size: 28px;
+            border-radius: 5px;
+            padding: 2px 25px;
+            font-size: 24px;
             font-weight: 900;
             text-transform: uppercase;
-            animation: titilar 0.6s infinite alternate; /* Efecto titilando */
+            z-index: 10;
+            display: none;
+            animation: titilar 0.6s infinite alternate;
         }
 
         @keyframes titilar {
@@ -98,10 +99,11 @@
         <div class="header-status">
             <div class="timer-tv"><span class="t-label" id="timer-title">TIEMPO PARTIDO</span><span class="t-val" id="val-timer">00:00:00</span></div>
             <div id="aviso-tv-top"><span class="msg-top" id="msg-tv-desc">CAMBIO</span><span class="t-val" style="margin-left:10px; color: black;" id="descanso-tv-q">90</span></div>
-            <div id="aviso-oro">ORO</div>
         </div>
 
         <div id="scoreboard">
+            <div id="aviso-oro">ORO</div>
+
             <div id="cartel-final"><div style="font-size: 100px; font-weight: 900; color: #ccff00; text-align: center; animation: flash-txt 0.6s infinite alternate;">PARTIDO<br>FINALIZADO</div></div>
             
             <div class="labels-row">
@@ -161,7 +163,7 @@
         document.getElementById('pA').innerText=d.p0; document.getElementById('pB').innerText=d.p1;
         document.getElementById('msg-tv-desc').innerText = d.msg;
         
-        // --- PASO 3: LÓGICA PARA MOSTRAR AVISO ORO ---
+        // Mostrar aviso ORO cuando el juez lo active
         document.getElementById('aviso-oro').style.display = d.oro ? 'flex' : 'none';
 
         [0,1,2].forEach(i => { 
