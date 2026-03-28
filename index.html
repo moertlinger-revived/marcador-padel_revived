@@ -2,64 +2,31 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>TV DISPLAY - V42 FINAL</title>
+    <title>TV DISPLAY - V43 FINAL</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
     <style>
         body { margin: 0; background: #000; font-family: 'Segoe UI', sans-serif; color: #fff; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; overflow: hidden; }
-        
         .brand-header { width: 950px; height: 90px; display: flex; align-items: center; justify-content: space-between; border-bottom: 2px solid #333; margin-bottom: 10px; }
         .title-main { font-size: 28px; font-weight: 900; color: #ccff00; text-transform: uppercase; }
-
-        /* BARRA DE ESTADO: TIEMPO + AVISO JUNTO | ESPACIO | TB DERECHA */
-        .header-status { 
-            width: 950px; 
-            display: flex; 
-            align-items: flex-end; 
-            justify-content: flex-start; /* Alinea al inicio por defecto */
-            height: 80px; 
-            margin-bottom: 15px;
-            gap: 15px; /* Espacio entre Tiempo y Aviso Cambio */
-        }
-
-        .timer-tv { 
-            background: #111; padding: 5px 20px; border-radius: 8px; 
-            border: 2px solid #333; min-width: 180px; text-align: center; 
-        }
+        .header-status { width: 950px; display: flex; align-items: flex-end; justify-content: flex-start; height: 80px; margin-bottom: 15px; gap: 15px; }
+        .timer-tv { background: #111; padding: 5px 20px; border-radius: 8px; border: 2px solid #333; min-width: 180px; text-align: center; }
         .t-label { font-size: 10px; color: #aaa; font-weight: 900; display: block; margin-bottom: -2px; }
         .t-val { font-size: 30px; color: #ccff00; font-family: monospace; font-weight: bold; }
-
-        #aviso-tv-top { 
-            background: #ffcc00; color: #000; border-radius: 8px; display: none; 
-            align-items: center; justify-content: center; gap: 15px; height: 65px; 
-            border: 3px solid #fff; width: 450px; /* Tamaño controlado al lado del tiempo */
-        }
+        #aviso-tv-top { background: #ffcc00; color: #000; border-radius: 8px; display: none; align-items: center; justify-content: center; gap: 15px; height: 65px; border: 3px solid #fff; width: 450px; }
         .msg-top { font-size: 24px; font-weight: 900; text-transform: uppercase; }
         .desc-top { font-size: 34px; font-family: monospace; font-weight: 900; }
-
-        /* AVISO TB SIEMPRE A LA DERECHA */
-        #aviso-tiebreak { 
-            margin-left: auto; /* Empuja este elemento al final derecho del contenedor */
-            width: 180px; background: #d32f2f; border-radius: 8px; border: 2px solid #f00; 
-            text-align: center; display: none; height: 65px; align-items: center; 
-            justify-content: center; font-weight: 900; font-size: 16px; color: #fff; 
-            text-transform: uppercase;
-        }
-
+        #aviso-tiebreak { margin-left: auto; width: 180px; background: #d32f2f; border-radius: 8px; border: 2px solid #f00; text-align: center; display: none; height: 65px; align-items: center; justify-content: center; font-weight: 900; font-size: 16px; color: #fff; text-transform: uppercase; }
         #scoreboard { width: 950px; background: #0a0a20; border: 4px solid #333; border-radius: 8px; overflow: hidden; position: relative; }
-        
         #cartel-final { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: #000; z-index: 100; display: none; flex-direction: column; align-items: center; justify-content: center; border: 15px solid #ccff00; box-sizing: border-box; }
         .txt-final-gigante { font-size: 85px; font-weight: 900; color: #ccff00; text-align: center; line-height: 0.9; animation: flash-txt 0.6s infinite alternate; }
         @keyframes flash-txt { from { opacity: 1; } to { opacity: 0.3; } }
-
         .labels-row { display: flex; background: rgba(255,255,255,0.08); font-size: 16px; color: #aaa; border-bottom: 2px solid #333; }
         .label-equipo { flex-grow: 1; padding: 15px 30px; }
         .label-box { width: 100px; text-align: center; padding: 15px 0; border-left: 2px solid #333; }
-        
         .equipo-block { display: flex; border-bottom: 8px solid #333; height: 155px; }
         .nombres-col { flex-grow: 1; display: flex; flex-direction: column; justify-content: space-around; background: #050510; }
         .name-cell { font-size: 40px; font-weight: 800; text-transform: uppercase; padding-left: 30px; display: flex; align-items: center; gap: 15px; }
-        
         .box { width: 100px; display: flex; justify-content: center; align-items: center; font-size: 70px; font-weight: 900; border-left: 2px solid #333; }
         .pts-cell { width: 180px; display: flex; justify-content: center; align-items: center; font-size: 110px; font-weight: 900; background: #c6a052; color: #000; border-left: 3px solid #333; }
         .pts-cell.modo-tb { background: #000 !important; color: #c6a052 !important; }
@@ -72,13 +39,11 @@
         <h1 class="title-main">OPEN PADEL CHAMPIONS</h1>
         <div style="width: 150px;"></div>
     </div>
-
     <div class="header-status">
         <div class="timer-tv"><span class="t-label" id="timer-title">TIEMPO PARTIDO</span><span class="t-val" id="val-timer">00:00:00</span></div>
         <div id="aviso-tv-top"><span class="msg-top" id="msg-tv-desc">CAMBIO</span><span class="desc-top" id="descanso-tv-q">90</span></div>
         <div id="aviso-tiebreak">TIE-BREAK</div>
     </div>
-    
     <div id="scoreboard">
         <div id="cartel-final"><div class="txt-final-gigante">PARTIDO<br>FINALIZADO</div></div>
         <div class="labels-row">
@@ -95,35 +60,21 @@
             <div class="box" id="s1-1">0</div><div class="box" id="s2-1">0</div><div class="box" id="s3-1">0</div><div class="pts-cell" id="pB">0</div>
         </div>
     </div>
-
 <script>
     const firebaseConfig = { apiKey: "AIzaSyCQkDrlFCRKMYDxM54dkl24hGu-e-ZdbMs", databaseURL: "https://padel-vivo-default-rtdb.firebaseio.com", projectId: "padel-vivo" };
     firebase.initializeApp(firebaseConfig); const db = firebase.database();
-
     db.ref("marcador/tiempos").on("value", (snap) => {
         const t = snap.val(); if(!t) return;
         document.getElementById('val-timer').innerText = t.vPel ? t.tPel : t.tPar; 
         document.getElementById('timer-title').innerText = t.vPel ? "TIEMPO PELOTEO" : "TIEMPO PARTIDO";
-        
         const avisoTop = document.getElementById('aviso-tv-top');
-        if((t.vDesc && t.tDesc > 0) || (t.modoFinal && !t.cartelGigante)) { 
-            avisoTop.style.display = 'flex'; 
-            document.getElementById('descanso-tv-q').innerText = (t.vDesc && t.tDesc > 0) ? t.tDesc : ""; 
-        } else { avisoTop.style.display = 'none'; }
-        
+        if((t.vDesc && t.tDesc > 0) || (t.modoFinal && !t.cartelGigante)) { avisoTop.style.display = 'flex'; document.getElementById('descanso-tv-q').innerText = (t.vDesc && t.tDesc > 0) ? t.tDesc : ""; } else { avisoTop.style.display = 'none'; }
         const tbBox = document.getElementById('aviso-tiebreak');
-        if (t.tiebreak && !t.modoFinal) {
-            tbBox.style.display = 'flex';
-            tbBox.innerText = t.esSTB ? "SUPER TIE-BREAK" : "TIE-BREAK";
-        } else {
-            tbBox.style.display = 'none';
-        }
-
+        if (t.tiebreak && !t.modoFinal) { tbBox.style.display = 'flex'; tbBox.innerText = t.esSTB ? "SUPER TIE-BREAK" : "TIE-BREAK"; } else { tbBox.style.display = 'none'; }
         document.getElementById('cartel-final').style.display = t.cartelGigante ? 'flex' : 'none';
         document.getElementById('pA').classList.toggle('modo-tb', t.tiebreak);
         document.getElementById('pB').classList.toggle('modo-tb', t.tiebreak);
     });
-
     db.ref("marcador/actual").on("value", (snap) => {
         const d = snap.val(); if(!d) return;
         document.getElementById('n0').innerText=d.n0; document.getElementById('n1').innerText=d.n1;
