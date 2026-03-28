@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>revived LIVE SCORE PRO - v11.1</title>
+    <title>revived LIVE SCORE PRO - v11.2</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
     <style>
@@ -147,18 +147,16 @@
     let localRunP = false;
     let localSTP = 0;
     let localACP = 0;
-    let localSegP = 0;
 
-    // Reloj interno del Display: corre siempre para evitar pausas si el juez se desconecta
+    // Reloj interno del Display: corre siempre comparando el tiempo actual con el de inicio enviado por el juez
     setInterval(() => {
         if(localRunP && localSTP > 0) {
-            let ahora = Date.now();
-            localSegP = localACP + Math.floor((ahora - localSTP) / 1000);
+            let actualSeg = Math.floor((Date.now() - localSTP) / 1000);
             
             if(document.getElementById('timer-title').innerText === "TIEMPO PARTIDO") {
-                let h=Math.floor(localSegP/3600).toString().padStart(2,'0'), 
-                    m=Math.floor((localSegP%3600)/60).toString().padStart(2,'0'), 
-                    s=(localSegP%60).toString().padStart(2,'0');
+                let h=Math.floor(actualSeg/3600).toString().padStart(2,'0'), 
+                    m=Math.floor((actualSeg%3600)/60).toString().padStart(2,'0'), 
+                    s=(actualSeg%60).toString().padStart(2,'0');
                 document.getElementById('val-timer').innerText = `${h}:${m}:${s}`;
             }
         }
@@ -177,7 +175,7 @@
             document.getElementById('timer-title').innerText = "CALENTAMIENTO";
         } else {
             document.getElementById('timer-title').innerText = "TIEMPO PARTIDO";
-            // Si el cronómetro no está corriendo (pausado por el juez), mostramos el valor estático enviado
+            // Si el cronómetro no está corriendo (pausado), mostramos el valor estático
             if(!localRunP) document.getElementById('val-timer').innerText = t.tPar;
         }
         
