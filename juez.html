@@ -9,7 +9,9 @@
     <style>
         * { box-sizing: border-box; touch-action: manipulation; }
         body { font-family: sans-serif; background: #000; color: #fff; margin: 0; padding: 5px; text-align: center; }
-        .encabezado { background: #222; padding: 10px; border-radius: 10px; margin-bottom: 5px; display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; }
+        /* Etiqueta de versión */
+        .version-tag { position: absolute; top: 2px; left: 5px; font-size: 9px; color: #555; font-weight: bold; }
+        .encabezado { background: #222; padding: 10px; border-radius: 10px; margin-bottom: 5px; display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; margin-top: 12px; }
         .config-regla { background: #333; color: #fff; border: 2px solid #555; padding: 10px; border-radius: 5px; font-size: 11px; font-weight: bold; cursor: pointer; min-width: 95px; }
         .config-regla.activo { background: #ccff00; color: #000; border-color: #fff; }
         .btn-reset-total { background: #d32f2f; color: #fff; border: 2px solid #f00; padding: 10px; border-radius: 5px; font-size: 11px; font-weight: bold; cursor: pointer; }
@@ -28,6 +30,8 @@
     </style>
 </head>
 <body onload="cargarLocal()">
+    <div class="version-tag">VER. 48</div>
+    
     <div id="cambio-lado-ctrl" class="aviso-cambio" onclick="aceptarCambio()">
         <span id="msg-descanso">CAMBIO DE LADO</span> <br>
         <div id="reloj-descanso-box" style="font-size: 40px; font-family: monospace; margin-top: 10px;"><span id="reloj-descanso">90</span>s</div>
@@ -117,14 +121,12 @@
         let gA = historialSets[0][setActualIdx], gB = historialSets[1][setActualIdx];
         let totalG = gA + gB;
 
-        // Comprobación de final de set antes que la de cambio de lado
         if((gA>=6 || gB>=6) && Math.abs(gA-gB)>=2) {
              checkWinnerSets();
         } else if(gA===limiteTB && gB===limiteTB) {
              modo="TIE-BREAK";
-             rotarSaqueNormal(); // El TB requiere rotación antes de empezar
+             rotarSaqueNormal();
         } else {
-            // Lógica de cambio de lado para juegos normales
             if(totalG % 2 !== 0) {
                 if(totalG === 1) {
                     dispararAviso("CAMBIO SIN DESCANSO", 10);
@@ -144,12 +146,8 @@
             else if(vA===7 && vB===6) sA++;
             else if(vB===7 && vA===6) sB++;
         }
-        if(sA === 2 || sB === 2) { 
-            cerrarPartido(); 
-        } else {
-            dispararAviso("SET Y CAMBIO", 120); 
-            ganarS(); 
-        }
+        if(sA === 2 || sB === 2) { cerrarPartido(); } 
+        else { dispararAviso("SET Y CAMBIO", 120); ganarS(); }
     }
     
     function cerrarPartido() { 
