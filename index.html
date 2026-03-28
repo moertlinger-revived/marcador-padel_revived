@@ -2,130 +2,86 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>TV DISPLAY - V25 TB ANIMATED</title>
+    <title>TV DISPLAY - FINAL V30</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
     <style>
         body { margin: 0; background: #000; font-family: 'Segoe UI', sans-serif; color: #fff; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; overflow: hidden; }
-        
-        .header-status { width: 950px; display: flex; align-items: flex-end; height: 70px; margin-bottom: 5px; gap: 10px; }
-        .timer-tv { background: #111; padding: 5px 10px; border-radius: 6px; border: 1px solid #333; text-align: center; width: 150px; flex-shrink: 0; }
+        .brand-header { width: 950px; height: 100px; display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; border-bottom: 2px solid #333; padding-bottom: 10px; }
+        .logo-container { width: 180px; height: 80px; display: flex; align-items: center; justify-content: flex-start; }
+        .logo-img { max-height: 80px; max-width: 100%; object-fit: contain; }
+        .title-container { flex-grow: 1; text-align: center; }
+        .title-main { font-size: 32px; font-weight: 900; text-transform: uppercase; color: #ccff00; letter-spacing: 2px; margin: 0; }
+        .title-sub { font-size: 14px; color: #aaa; text-transform: uppercase; margin: 0; }
+        .header-status { width: 950px; display: flex; align-items: center; height: 60px; margin-bottom: 5px; gap: 10px; }
+        .timer-tv { background: #111; padding: 5px 10px; border-radius: 6px; border: 1px solid #333; text-align: center; width: 150px; }
         .t-lab { font-size: 9px; color: #aaa; text-transform: uppercase; font-weight: bold; display: block; }
         .t-val { font-size: 24px; color: #ccff00; font-family: monospace; font-weight: bold; }
-
-        #aviso-tv-top { background: #ffcc00; color: #000; border-radius: 6px; display: none; align-items: center; justify-content: center; gap: 15px; height: 52px; border: 2px solid #fff; width: 595px; flex-shrink: 0; }
-        .msg-top { font-size: 16px; font-weight: 900; text-transform: uppercase; white-space: nowrap; }
-        .desc-top { font-size: 30px; font-family: monospace; font-weight: 900; }
-
-        /* AVISO TIE-BREAK CON ANIMACIÓN */
-        #aviso-tiebreak { 
-            width: 160px; background: #d32f2f; border-radius: 6px; border: 1px solid #f00; 
-            text-align: center; display: none; height: 52px; align-items: center; justify-content: center; 
-            flex-shrink: 0; margin-left: auto;
-            animation: pulse-red 1.5s infinite ease-in-out;
-        }
-        @keyframes pulse-red {
-            0% { background: #d32f2f; box-shadow: 0 0 5px #f00; }
-            50% { background: #ff0000; box-shadow: 0 0 20px #f00; }
-            100% { background: #d32f2f; box-shadow: 0 0 5px #f00; }
-        }
-        .tb-txt { font-size: 16px; font-weight: 900; color: #fff; text-transform: uppercase; }
-
-        #scoreboard { width: 950px; background: #0a0a20; border: 3px solid #333; }
+        #aviso-tv-top { background: #ffcc00; color: #000; border-radius: 6px; display: none; align-items: center; justify-content: center; gap: 15px; height: 52px; border: 2px solid #fff; flex-grow: 1; }
+        #aviso-tiebreak { width: 160px; background: #d32f2f; border-radius: 6px; border: 1px solid #f00; text-align: center; display: none; height: 52px; align-items: center; justify-content: center; animation: pulse-red 1.5s infinite ease-in-out; margin-left: auto; }
+        @keyframes pulse-red { 0% { background: #d32f2f; } 50% { background: #ff0000; } 100% { background: #d32f2f; } }
+        #scoreboard { width: 950px; background: #0a0a20; border: 3px solid #333; position: relative; }
         .labels-row { display: flex; background: rgba(255,255,255,0.05); font-size: 14px; color: #aaa; font-weight: bold; border-bottom: 2px solid #333; }
         .label-equipo { flex-grow: 1; padding: 10px 25px; }
         .label-box { width: 90px; text-align: center; padding: 10px 0; border-left: 1px solid #333; }
-        
         .equipo-block { display: flex; border-bottom: 5px solid #444; }
         .equipo-block:last-child { border-bottom: none; }
-        
         .nombres-col { flex-grow: 1; display: flex; flex-direction: column; justify-content: center; }
         .jugador-row { display: flex; height: 65px; align-items: center; }
-        .name-cell { flex-grow: 1; padding-left: 25px; font-size: 32px; font-weight: 800; display: flex; align-items: center; text-transform: uppercase; }
-        
+        .name-cell { flex-grow: 1; padding-left: 25px; font-size: 32px; font-weight: 800; text-transform: uppercase; display: flex; align-items: center; }
         .box { width: 90px; display: flex; justify-content: center; align-items: center; font-size: 60px; font-weight: 900; border-left: 2px solid #333; }
-        
-        /* PUNTOS NORMALES */
-        .pts-cell { 
-            width: 160px; display: flex; justify-content: center; align-items: center; 
-            font-size: 100px; font-weight: 900; background: #c6a052; color: #000; 
-            border-left: 2px solid #333; transition: all 0.4s ease;
-        }
-
-        /* PUNTOS TIE-BREAK INVERTIDOS */
-        .pts-cell.modo-tiebreak {
-            background: #000;
-            color: #c6a052;
-            text-shadow: 0 0 10px rgba(198, 160, 82, 0.7);
-        }
-        
+        .pts-cell { width: 160px; display: flex; justify-content: center; align-items: center; font-size: 100px; font-weight: 900; background: #c6a052; color: #000; border-left: 2px solid #333; }
+        .pts-cell.modo-tiebreak { background: #000; color: #c6a052; }
         .bola { width: 20px; height: 20px; background: #ccff00; border-radius: 50%; margin-left: 15px; display: none; box-shadow: 0 0 15px #ccff00; }
-        .oro-anim { animation: flash-gold 0.8s infinite alternate; }
-        @keyframes flash-gold { from { background: #c6a052; } to { background: #fff; } }
+        #fin-partido { position: absolute; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.9); display:none; flex-direction:column; align-items:center; justify-content:center; z-index:10; border: 5px solid #ccff00; box-sizing: border-box; }
+        .fin-txt { font-size: 60px; font-weight: 900; color: #ccff00; }
     </style>
 </head>
 <body>
+    <div class="brand-header">
+        <div class="logo-container"><img src="https://via.placeholder.com/180x80?text=TU+LOGO" alt="Logo" class="logo-img"></div>
+        <div class="title-container"><h1 class="title-main">OPEN PADEL 2026</h1><p class="title-sub">Pista Central - En Vivo</p></div>
+        <div style="width: 180px;"></div>
+    </div>
     <div class="header-status">
-        <div class="timer-tv"><span id="label-timer" class="t-lab">PELOTEO</span><span id="val-timer" class="t-val">05:00</span></div>
-        <div id="aviso-tv-top"><span class="msg-top" id="msg-tv-desc">CAMBIO DE LADO</span><span class="desc-top" id="descanso-tv-q">90</span></div>
-        <div id="aviso-tiebreak"><span class="tb-txt">TIE-BREAK</span></div>
+        <div class="timer-tv"><span class="t-lab" id="label-timer">PELOTEO</span><span class="t-val" id="val-timer">05:00</span></div>
+        <div id="aviso-tv-top"><span class="msg-top" id="msg-tv-desc">CAMBIO</span>&nbsp;<span class="desc-top" id="descanso-tv-q">90</span></div>
+        <div id="aviso-tiebreak"><span style="font-weight:900; color:white;">TIE-BREAK</span></div>
     </div>
-    
     <div id="scoreboard">
-        <div class="labels-row">
-            <div class="label-equipo">EQUIPOS / JUGADORES</div><div class="label-box">SET 1</div><div class="label-box">SET 2</div><div class="label-box">SET 3</div>
-            <div style="width:160px; text-align:center; padding:10px 0; border-left:1px solid #333; color:#c6a052">PUNTOS</div>
+        <div id="fin-partido"><div class="fin-txt">PARTIDO FINALIZADO</div></div>
+        <div class="labels-row"><div class="label-equipo">JUGADORES</div><div class="label-box">SET 1</div><div class="label-box">SET 2</div><div class="label-box">SET 3</div><div style="width:160px; text-align:center; border-left:1px solid #333; color:#c6a052">PUNTOS</div></div>
+        <div class="equipo-block">
+            <div class="nombres-col"><div class="jugador-row"><div class="name-cell"><span id="n0">-</span><div id="b0" class="bola"></div></div></div><div class="jugador-row"><div class="name-cell"><span id="n1">-</span><div id="b1" class="bola"></div></div></div></div>
+            <div class="box" id="s1-0">0</div><div class="box" id="s2-0">0</div><div class="box" id="s3-0">0</div><div class="pts-cell" id="pA">0</div>
         </div>
         <div class="equipo-block">
-            <div class="nombres-col">
-                <div class="jugador-row"><div class="name-cell"><span id="n0">-</span><div id="b0" class="bola"></div></div></div>
-                <div class="jugador-row"><div class="name-cell"><span id="n1">-</span><div id="b1" class="bola"></div></div></div>
-            </div>
-            <div class="box" id="s1-0">0</div><div class="box" id="s2-0">0</div><div class="box" id="s3-0">0</div>
-            <div class="pts-cell" id="pA">0</div>
-        </div>
-        <div class="equipo-block">
-            <div class="nombres-col">
-                <div class="jugador-row"><div class="name-cell"><span id="n2">-</span><div id="b2" class="bola"></div></div></div>
-                <div class="jugador-row"><div class="name-cell"><span id="n3">-</span><div id="b3" class="bola"></div></div></div>
-            </div>
-            <div class="box" id="s1-1">0</div><div class="box" id="s2-1">0</div><div class="box" id="s3-1">0</div>
-            <div class="pts-cell" id="pB">0</div>
+            <div class="nombres-col"><div class="jugador-row"><div class="name-cell"><span id="n2">-</span><div id="b2" class="bola"></div></div></div><div class="jugador-row"><div class="name-cell"><span id="n3">-</span><div id="b3" class="bola"></div></div></div></div>
+            <div class="box" id="s1-1">0</div><div class="box" id="s2-1">0</div><div class="box" id="s3-1">0</div><div class="pts-cell" id="pB">0</div>
         </div>
     </div>
-
 <script>
     const firebaseConfig = { apiKey: "AIzaSyCQkDrlFCRKMYDxM54dkl24hGu-e-ZdbMs", databaseURL: "https://padel-vivo-default-rtdb.firebaseio.com", projectId: "padel-vivo" };
     firebase.initializeApp(firebaseConfig); const db = firebase.database();
-
     db.ref("marcador/tiempos").on("value", (snap) => {
         const t = snap.val(); if(!t) return;
         document.getElementById('label-timer').innerText = t.vPel ? "PELOTEO" : "TIEMPO PARTIDO"; 
         document.getElementById('val-timer').innerText = t.vPel ? t.tPel : t.tPar; 
-        const avisoTop = document.getElementById('aviso-tv-top');
-        if(t.vDesc && t.tDesc > 0) { avisoTop.style.display = 'flex'; document.getElementById('descanso-tv-q').innerText = t.tDesc; }
-        else { avisoTop.style.display = 'none'; }
+        document.getElementById('aviso-tv-top').style.display = (t.vDesc && t.tDesc > 0) ? 'flex' : 'none';
+        if(t.tDesc) document.getElementById('descanso-tv-q').innerText = t.tDesc;
         document.getElementById('aviso-tiebreak').style.display = t.tiebreak ? 'flex' : 'none';
     });
-
     db.ref("marcador/actual").on("value", (snap) => {
         const d = snap.val(); if(!d) return;
         document.getElementById('n0').innerText=d.n0; document.getElementById('n1').innerText=d.n1;
         document.getElementById('n2').innerText=d.n2; document.getElementById('n3').innerText=d.n3;
         document.getElementById('pA').innerText=d.p0; document.getElementById('pB').innerText=d.p1;
-        document.getElementById('msg-tv-desc').innerText = d.msg;
-        
+        document.getElementById('fin-partido').style.display = d.finalizado ? 'flex' : 'none';
         const esTB = (d.modo === "TIE-BREAK");
         document.getElementById('pA').classList.toggle('modo-tiebreak', esTB);
         document.getElementById('pB').classList.toggle('modo-tiebreak', esTB);
-
-        [0,1,2].forEach(i => { 
-            document.getElementById(`s${i+1}-0`).innerText = d.h0[i]; 
-            document.getElementById(`s${i+1}-1`).innerText = d.h1[i]; 
-        });
+        [0,1,2].forEach(i => { document.getElementById(`s${i+1}-0`).innerText = d.h0[i]; document.getElementById(`s${i+1}-1`).innerText = d.h1[i]; });
         for(let i=0; i<4; i++) document.getElementById(`b${i}`).style.display = (d.sIdx===i) ? 'block' : 'none';
-        document.getElementById('pA').classList.toggle('oro-anim', d.oro);
-        document.getElementById('pB').classList.toggle('oro-anim', d.oro);
     });
 </script>
 </body>
