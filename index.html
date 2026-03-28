@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>TV DISPLAY - V41 FINAL</title>
+    <title>TV DISPLAY - V42 FINAL</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
     <style>
@@ -11,30 +11,35 @@
         .brand-header { width: 950px; height: 90px; display: flex; align-items: center; justify-content: space-between; border-bottom: 2px solid #333; margin-bottom: 10px; }
         .title-main { font-size: 28px; font-weight: 900; color: #ccff00; text-transform: uppercase; }
 
-        /* BARRA DE ESTADO CON DISTRIBUCIÓN FIJA */
+        /* BARRA DE ESTADO: TIEMPO + AVISO JUNTO | ESPACIO | TB DERECHA */
         .header-status { 
             width: 950px; 
             display: flex; 
             align-items: flex-end; 
-            justify-content: space-between; /* CRONO (Izquierda) - AVISO (Centro) - TB (Derecha) */
+            justify-content: flex-start; /* Alinea al inicio por defecto */
             height: 80px; 
-            margin-bottom: 15px; 
+            margin-bottom: 15px;
+            gap: 15px; /* Espacio entre Tiempo y Aviso Cambio */
         }
 
-        .timer-tv { background: #111; padding: 5px 20px; border-radius: 8px; border: 2px solid #333; min-width: 180px; text-align: center; }
+        .timer-tv { 
+            background: #111; padding: 5px 20px; border-radius: 8px; 
+            border: 2px solid #333; min-width: 180px; text-align: center; 
+        }
         .t-label { font-size: 10px; color: #aaa; font-weight: 900; display: block; margin-bottom: -2px; }
         .t-val { font-size: 30px; color: #ccff00; font-family: monospace; font-weight: bold; }
 
         #aviso-tv-top { 
             background: #ffcc00; color: #000; border-radius: 8px; display: none; 
             align-items: center; justify-content: center; gap: 15px; height: 65px; 
-            border: 3px solid #fff; width: 500px; /* Ancho fijo para mantener simetría */
+            border: 3px solid #fff; width: 450px; /* Tamaño controlado al lado del tiempo */
         }
-        .msg-top { font-size: 26px; font-weight: 900; text-transform: uppercase; }
-        .desc-top { font-size: 38px; font-family: monospace; font-weight: 900; }
+        .msg-top { font-size: 24px; font-weight: 900; text-transform: uppercase; }
+        .desc-top { font-size: 34px; font-family: monospace; font-weight: 900; }
 
-        /* AVISO TB FIJO SOBRE LOS PUNTOS */
+        /* AVISO TB SIEMPRE A LA DERECHA */
         #aviso-tiebreak { 
+            margin-left: auto; /* Empuja este elemento al final derecho del contenedor */
             width: 180px; background: #d32f2f; border-radius: 8px; border: 2px solid #f00; 
             text-align: center; display: none; height: 65px; align-items: center; 
             justify-content: center; font-weight: 900; font-size: 16px; color: #fff; 
@@ -106,7 +111,6 @@
             document.getElementById('descanso-tv-q').innerText = (t.vDesc && t.tDesc > 0) ? t.tDesc : ""; 
         } else { avisoTop.style.display = 'none'; }
         
-        // Lógica de texto TB o Super TB
         const tbBox = document.getElementById('aviso-tiebreak');
         if (t.tiebreak && !t.modoFinal) {
             tbBox.style.display = 'flex';
