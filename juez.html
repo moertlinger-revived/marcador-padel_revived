@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>JUEZ PADEL PRO - V31 FINAL</title>
+    <title>JUEZ PADEL PRO - V32 FINAL</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
     <style>
@@ -18,16 +18,17 @@
         .timer-label { font-size: 8px; color: #aaa; font-weight: bold; }
         .timer-val { font-family: monospace; font-size: 18px; color: #ccff00; font-weight: bold; }
         .btn-t { font-size: 9px; padding: 4px 8px; background: #444; color: #fff; border: none; border-radius: 3px; cursor: pointer; }
-        .tablero-juez { display: flex; flex-direction: column; gap: 8px; }
-        .equipo-contenedor { background: #111; border: 2px solid #333; border-radius: 12px; padding: 10px; }
+        .equipo-contenedor { background: #111; border: 2px solid #333; border-radius: 12px; padding: 10px; margin-bottom: 8px; }
         .fila-jugador { display: flex; align-items: center; justify-content: space-between; background: #222; margin-bottom: 5px; padding: 8px; border-radius: 8px; border: 2px solid transparent; }
         .fila-jugador.sirviendo { border-color: #ccff00; background: #2a2a00; }
         .nombre-j { font-size: 14px; font-weight: bold; flex-grow: 1; text-align: left; }
-        .btn-saque-mini { font-size: 10px; padding: 6px; background: #444; color: #fff; border: 1px solid #666; border-radius: 5px; }
-        .btn-saque-mini.activo { background: #ccff00; color: #000; }
         .puntos-display { font-size: 55px; font-weight: 900; color: #c6a052; margin: 5px 0; }
         .btn-punto { width: 100%; padding: 15px; background: #c6a052; border: none; border-radius: 10px; font-size: 18px; font-weight: bold; color: #000; }
-        .aviso-cambio { background: rgba(255, 204, 0, 0.95); color: #000; padding: 15px; font-weight: bold; border-radius: 10px; position: absolute; top: 10px; left: 10px; width: calc(100% - 20px); z-index: 100; display: none; cursor: pointer; border: 3px solid #fff; }
+        
+        /* AVISO MEJORADO */
+        .aviso-cambio { background: #ffcc00; color: #000; padding: 20px; font-size: 24px; font-weight: 900; border-radius: 12px; position: absolute; top: 10px; left: 10px; width: calc(100% - 20px); z-index: 100; display: none; border: 5px solid #fff; box-shadow: 0 0 30px rgba(0,0,0,0.5); }
+        .titileo { animation: flash 0.5s infinite alternate; }
+        @keyframes flash { from { opacity: 1; } to { opacity: 0.4; } }
     </style>
 </head>
 <body onload="cargarLocal()">
@@ -40,32 +41,32 @@
         <button class="config-regla" onclick="cicloSTB()" id="btn-stb">3er SET: NORMAL</button>
         <button class="config-regla" onclick="togglePuntoOro()" id="btn-oro">ORO: NO</button>
         <button class="config-regla" style="background:#555;" onclick="deshacer()">↩ CORREGIR</button>
-        <button class="btn-reset-total" onclick="resetTotal()">⚠️ RESET TOTAL</button>
+        <button class="btn-reset-total" onclick="resetTotal()">⚠️ RESET</button>
     </div>
 
     <div class="zona-tiempos">
         <div class="timer-box">
             <span class="timer-label">CALENTAMIENTO</span>
             <span id="disp-peloteo" class="timer-val">05:00</span>
-            <div><button class="btn-t" onclick="toggleTimer('peloteo')">PLAY</button><button class="btn-t" onclick="resetTimer('peloteo')">RESET</button></div>
+            <div><button class="btn-t" onclick="toggleTimer('peloteo')">PLAY</button><button class="btn-t" onclick="resetTimer('peloteo')">RESET</button><button class="btn-t" onclick="toggleVisPeloteo()">👁️</button></div>
         </div>
         <div class="timer-box">
-            <span class="timer-label">TIEMPO PARTIDO</span>
+            <span class="timer-label">PARTIDO</span>
             <span id="disp-partido" class="timer-val">00:00:00</span>
-            <div><button class="btn-t" onclick="toggleTimer('partido')">PLAY / PAUSE</button></div>
+            <div><button class="btn-t" onclick="toggleTimer('partido')">PLAY/PAUSE</button></div>
         </div>
     </div>
 
     <div class="tablero-juez">
         <div class="equipo-contenedor">
-            <div class="fila-jugador" id="f-j0"><span class="nombre-j" id="n0" onclick="cambiarNombre(0)">JUGADOR 1A</span><button class="btn-saque-mini" id="btn-s0" onclick="definirSaque(0)">SAQUE</button></div>
-            <div class="fila-jugador" id="f-j1"><span class="nombre-j" id="n1" onclick="cambiarNombre(1)">JUGADOR 1B</span><button class="btn-saque-mini" id="btn-s1" onclick="definirSaque(1)">SAQUE</button></div>
+            <div class="fila-jugador" id="f-j0"><span class="nombre-j" id="n0" onclick="cambiarNombre(0)">JUGADOR 1A</span><button class="btn-t" id="btn-s0" onclick="definirSaque(0)">SAQUE</button></div>
+            <div class="fila-jugador" id="f-j1"><span class="nombre-j" id="n1" onclick="cambiarNombre(1)">JUGADOR 1B</span><button class="btn-t" id="btn-s1" onclick="definirSaque(1)">SAQUE</button></div>
             <div class="puntos-display" id="pA">0</div>
             <button class="btn-punto" onclick="sumar(0)">+ EQ 1</button>
         </div>
         <div class="equipo-contenedor">
-            <div class="fila-jugador" id="f-j2"><span class="nombre-j" id="n2" onclick="cambiarNombre(2)">JUGADOR 2A</span><button class="btn-saque-mini" id="btn-s2" onclick="definirSaque(2)">SAQUE</button></div>
-            <div class="fila-jugador" id="f-j3"><span class="nombre-j" id="n3" onclick="cambiarNombre(3)">JUGADOR 2B</span><button class="btn-saque-mini" id="btn-s3" onclick="definirSaque(3)">SAQUE</button></div>
+            <div class="fila-jugador" id="f-j2"><span class="nombre-j" id="n2" onclick="cambiarNombre(2)">JUGADOR 2A</span><button class="btn-t" id="btn-s2" onclick="definirSaque(2)">SAQUE</button></div>
+            <div class="fila-jugador" id="f-j3"><span class="nombre-j" id="n3" onclick="cambiarNombre(3)">JUGADOR 2B</span><button class="btn-t" id="btn-s3" onclick="definirSaque(3)">SAQUE</button></div>
             <div class="puntos-display" id="pB">0</div>
             <button class="btn-punto" onclick="sumar(1)">+ EQ 2</button>
         </div>
@@ -121,8 +122,7 @@
             if(pts[eq] >= meta && (pts[eq] - pts[ot]) >= 2) {
                 if(setActualIdx === 2 && modoSTB > 0) {
                     historialSets[eq][2] = 7; historialSets[ot][2] = 6;
-                    finalizado = true; runP = false; pts = [0,0];
-                    dispararAviso("PARTIDO FINALIZADO (STB)", 300);
+                    cerrarPartido();
                 } else {
                     pts = [0,0]; ganarG(eq);
                 }
@@ -143,8 +143,7 @@
         }
 
         if(setsA === 2 || setsB === 2) {
-            finalizado = true; runP = false;
-            dispararAviso("PARTIDO FINALIZADO", 300);
+            cerrarPartido();
         } else if((gA >= 6 || gB >= 6) && Math.abs(gA - gB) >= 2 || modo === "TIE-BREAK") {
             dispararAviso("SET Y CAMBIO", 120); ganarS();
         } else {
@@ -154,7 +153,17 @@
         rotarSaqueNormal();
     }
 
+    function cerrarPartido() {
+        finalizado = true;
+        runP = false;
+        pts = [0,0];
+        document.getElementById('cambio-lado').classList.add('titileo');
+        dispararAviso("PARTIDO FINALIZADO", 15);
+        setTimeout(() => { document.getElementById('cambio-lado').classList.remove('titileo'); }, 15000);
+    }
+
     function ganarS() { if(setActualIdx < 2) { setActualIdx++; modo=(setActualIdx===2 && modoSTB>0)?"TIE-BREAK":"NORMAL"; pts=[0,0]; } }
+    function toggleVisPeloteo() { visPel = !visPel; render(); }
     function rotarSaqueNormal() { 
         let sigEq = (saqueJugadorIdx < 2) ? 1 : 0;
         if(saqueJugadorIdx===0||saqueJugadorIdx===1) proximoSacadorEq[0]=(saqueJugadorIdx===0)?1:0;
@@ -173,9 +182,9 @@
     function aceptarCambio() { runDescanso=false; document.getElementById('cambio-lado').style.display="none"; render(); }
     function resetTotal() { if(confirm("¿RESET TOTAL?")) { localStorage.clear(); db.ref("marcador").remove(); location.reload(); } }
     function deshacer() { if(stack.length>0) { let e=JSON.parse(stack.pop()); pts=e.pts; historialSets=e.h; setActualIdx=e.sIdx; modo=e.m; saqueJugadorIdx=e.sq; proximoSacadorEq=e.pS; puntoOroActivo=e.oro; modoSTB=e.mstb; finalizado=e.f; runP=e.rP; render(); } }
-    function guardarLocal() { localStorage.setItem('padel_pro_v31', JSON.stringify({pts, historialSets, setActualIdx, modo, modoSTB, finalizado, saqueJugadorIdx, proximoSacadorEq, segP, names:[document.getElementById('n0').innerText,document.getElementById('n1').innerText,document.getElementById('n2').innerText,document.getElementById('n3').innerText]})); }
+    function guardarLocal() { localStorage.setItem('padel_pro_v32', JSON.stringify({pts, historialSets, setActualIdx, modo, modoSTB, finalizado, saqueJugadorIdx, proximoSacadorEq, segP, names:[document.getElementById('n0').innerText,document.getElementById('n1').innerText,document.getElementById('n2').innerText,document.getElementById('n3').innerText]})); }
     function cargarLocal() { 
-        let b = JSON.parse(localStorage.getItem('padel_pro_v31')); 
+        let b = JSON.parse(localStorage.getItem('padel_pro_v32')); 
         if(b) { 
             pts=b.pts; historialSets=b.historialSets; setActualIdx=b.setActualIdx; modo=b.modo; modoSTB=b.modoSTB; finalizado=b.finalizado; saqueJugadorIdx=b.saqueJugadorIdx; proximoSacadorEq=b.proximoSacadorEq; segP=b.segP;
             b.names.forEach((n,i) => document.getElementById('n'+i).innerText=n); render();
@@ -193,7 +202,7 @@
             document.getElementById(`f-j${i}`).classList.toggle('sirviendo', saqueJugadorIdx===i); 
             document.getElementById(`btn-s${i}`).style.background = (saqueJugadorIdx===i)?"#ccff00":"#444";
         }
-        db.ref("marcador/actual").set({ n0:document.getElementById('n0').innerText, n1:document.getElementById('n1').innerText, n2:document.getElementById('n2').innerText, n3:document.getElementById('n3').innerText, h0:historialSets[0], h1:historialSets[1], p0:document.getElementById('pA').innerText, p1:document.getElementById('pB').innerText, sIdx:saqueJugadorIdx, modo:modo, oro:(puntoOroActivo && pts[0]===3 && pts[1]===3), finalizado:finalizado });
+        db.ref("marcador/actual").set({ n0:document.getElementById('n0').innerText, n1:document.getElementById('n1').innerText, n2:document.getElementById('n2').innerText, n3:document.getElementById('n3').innerText, h0:historialSets[0], h1:historialSets[1], p0:document.getElementById('pA').innerText, p1:document.getElementById('pB').innerText, sIdx:saqueJugadorIdx, modo:modo, oro:(puntoOroActivo && pts[0]===3 && pts[1]===3), finalizado:finalizado, msg:document.getElementById('msg-descanso').innerText });
         guardarLocal();
     }
 </script>
