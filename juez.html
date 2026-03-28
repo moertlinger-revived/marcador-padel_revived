@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>JUEZ PADEL CONTROL - V44</title>
+    <title>JUEZ PADEL CONTROL - V45</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
     <style>
@@ -32,7 +32,6 @@
         <span id="msg-descanso">CAMBIO DE LADO</span> <br>
         <div id="reloj-descanso-box" style="font-size: 40px; font-family: monospace; margin-top: 10px;"><span id="reloj-descanso">90</span>s</div>
     </div>
-
     <div class="encabezado">
         <button class="config-regla" onclick="cambiarReglaTB()" id="btn-regla">TB: 6-6</button>
         <button class="config-regla" onclick="cicloSTB()" id="btn-stb">3er SET: NORMAL</button>
@@ -40,7 +39,6 @@
         <button class="config-regla" style="background:#555;" onclick="deshacer()">↩ CORREGIR</button>
         <button class="btn-reset-total" onclick="resetTotal()">⚠️ RESET</button>
     </div>
-
     <div class="zona-tiempos">
         <div class="timer-box">
             <span class="timer-label">CALENTAMIENTO</span><span id="disp-peloteo" class="timer-val">05:00</span>
@@ -51,7 +49,6 @@
             <div><button class="btn-t" onclick="toggleTimer('partido')">PLAY/PAUSE</button></div>
         </div>
     </div>
-
     <div class="tablero-juez">
         <div class="equipo-contenedor">
             <div class="fila-jugador" id="f-j0"><span class="nombre-j" id="n0" onclick="cambiarNombre(0)">J1A</span><button class="btn-t" id="btn-s0" onclick="definirSaque(0)">SAQUE</button></div>
@@ -64,7 +61,6 @@
             <div class="puntos-display" id="pB">0</div><button class="btn-punto" onclick="sumar(1)">+ EQ 2</button>
         </div>
     </div>
-
 <script>
     const firebaseConfig = { apiKey: "AIzaSyCQkDrlFCRKMYDxM54dkl24hGu-e-ZdbMs", databaseURL: "https://padel-vivo-default-rtdb.firebaseio.com", projectId: "padel-vivo" };
     firebase.initializeApp(firebaseConfig); const db = firebase.database();
@@ -85,6 +81,7 @@
         db.ref("marcador/tiempos").set({ tPar:`${h}:${m}:${s}`, tPel:`${pm}:${ps}`, vPel:visPel, tDesc:segDescanso, vDesc:runDescanso, tiebreak:(modo==="TIE-BREAK" && !finalizado), esSTB: (setActualIdx === 2 && modoSTB > 0), cartelGigante: cartelGiganteFinal, modoFinal: finalizado });
         document.getElementById('disp-partido').innerText = `${h}:${m}:${s}`;
         document.getElementById('disp-peloteo').innerText = `${pm}:${ps}`;
+        guardarLocal();
     }
 
     function sumar(eq) {
@@ -104,7 +101,6 @@
             if((pts[0]+pts[1])%2!==0) rotarSaqueTB();
             let meta = (setActualIdx===2 && modoSTB===1) ? 10 : (setActualIdx===2 && modoSTB===2) ? 11 : 7;
             if(pts[eq] >= meta && (pts[eq] - pts[ot]) >= 2) {
-                // CORRECCIÓN: ANOTAR SIEMPRE 7-6 (O EL MARCADOR DE CIERRE DE SET SEGÚN EL REGLAMENTO)
                 historialSets[eq][setActualIdx] = 7; 
                 historialSets[ot][setActualIdx] = 6;
                 if(setActualIdx === 2 && modoSTB > 0) { cerrarPartido(); }
@@ -117,14 +113,9 @@
     function ganarG(eq) {
         historialSets[eq][setActualIdx]++;
         let gA = historialSets[0][setActualIdx], gB = historialSets[1][setActualIdx];
-        let sA = 0, sB = 0;
-        for(let i=0; i<3; i++) {
-            if(historialSets[0][i]>historialSets[1][i] && (historialSets[0][i]>=6 || (i===2 && modoSTB>0))) sA++;
-            if(historialSets[1][i]>historialSets[0][i] && (historialSets[1][i]>=6 || (i===2 && modoSTB>0))) sB++;
-        }
-        if(sA === 2 || sB === 2) cerrarPartido();
-        else if((gA>=6 || gB>=6) && Math.abs(gA-gB)>=2) { dispararAviso("SET Y CAMBIO", 120); ganarS(); }
-        else { if((gA+gB)%2!==0) dispararAviso("CAMBIO LADO", 90); if(gA===limiteTB && gB===limiteTB) modo="TIE-BREAK"; }
+        if((gA+gB)%2!==0) dispararAviso("CAMBIO LADO", 90);
+        if((gA>=6 || gB>=6) && Math.abs(gA-gB)>=2) { dispararAviso("SET Y CAMBIO", 120); ganarS(); }
+        else if(gA===limiteTB && gB===limiteTB) { modo="TIE-BREAK"; }
         rotarSaqueNormal();
     }
 
@@ -145,8 +136,19 @@
     function rotarSaqueTB() { if(saqueJugadorIdx < 2) { saqueJugadorIdx = proximoSacadorEq[1]; proximoSacadorEq[1] = (proximoSacadorEq[1] === 2) ? 3 : 2; } else { saqueJugadorIdx = proximoSacadorEq[0]; proximoSacadorEq[0] = (proximoSacadorEq[0] === 0) ? 1 : 0; } }
     function deshacer() { if(stack.length>0) { let e=JSON.parse(stack.pop()); pts=e.pts; historialSets=e.h; setActualIdx=e.sIdx; modo=e.m; saqueJugadorIdx=e.sq; proximoSacadorEq=e.pS; puntoOroActivo=e.oro; modoSTB=e.mstb; finalizado=e.f; runP=e.rP; cartelGiganteFinal = e.cg; limiteTB = e.ltb || 6; render(); } }
     function resetTotal() { if(confirm("RESET?")) { localStorage.clear(); db.ref("marcador").remove(); location.reload(); } }
-    function guardarLocal() { localStorage.setItem('padel_v44', JSON.stringify({pts, historialSets, setActualIdx, modo, modoSTB, finalizado, saqueJugadorIdx, proximoSacadorEq, segP, limiteTB, names:[document.getElementById('n0').innerText,document.getElementById('n1').innerText,document.getElementById('n2').innerText,document.getElementById('n3').innerText]})); }
-    function cargarLocal() { let b = JSON.parse(localStorage.getItem('padel_v44')); if(b) { pts=b.pts; historialSets=b.historialSets; setActualIdx=b.setActualIdx; modo=b.modo; modoSTB=b.modoSTB; finalizado=b.finalizado; saqueJugadorIdx=b.saqueJugadorIdx; proximoSacadorEq=b.proximoSacadorEq; segP=b.segP; limiteTB=b.limiteTB || 6; b.names.forEach((n,i) => document.getElementById('n'+i).innerText=n); render(); } }
+    
+    function guardarLocal() { 
+        localStorage.setItem('padel_v45', JSON.stringify({pts, historialSets, setActualIdx, modo, modoSTB, finalizado, saqueJugadorIdx, proximoSacadorEq, segP, segPel, limiteTB, puntoOroActivo, names:[document.getElementById('n0').innerText,document.getElementById('n1').innerText,document.getElementById('n2').innerText,document.getElementById('n3').innerText]})); 
+    }
+    
+    function cargarLocal() { 
+        let b = JSON.parse(localStorage.getItem('padel_v45')); 
+        if(b) { 
+            pts=b.pts; historialSets=b.historialSets; setActualIdx=b.setActualIdx; modo=b.modo; modoSTB=b.modoSTB; finalizado=b.finalizado; saqueJugadorIdx=b.saqueJugadorIdx; proximoSacadorEq=b.proximoSacadorEq; segP=b.segP; segPel=b.segPel || 300; limiteTB=b.limiteTB || 6; puntoOroActivo=b.puntoOroActivo || false; 
+            b.names.forEach((n,i) => document.getElementById('n'+i).innerText=n); 
+            render(); 
+        } 
+    }
 
     function render() {
         const l = ["0","15","30","40","Ad"];
@@ -160,7 +162,6 @@
         document.getElementById('btn-oro').classList.toggle('activo', puntoOroActivo);
         for(let i=0; i<4; i++) document.getElementById(`f-j${i}`).classList.toggle('sirviendo', saqueJugadorIdx===i); 
         db.ref("marcador/actual").set({ n0:document.getElementById('n0').innerText, n1:document.getElementById('n1').innerText, n2:document.getElementById('n2').innerText, n3:document.getElementById('n3').innerText, h0:historialSets[0], h1:historialSets[1], p0:document.getElementById('pA').innerText, p1:document.getElementById('pB').innerText, sIdx:saqueJugadorIdx, modo:modo, oro:(puntoOroActivo && pts[0]===3 && pts[1]===3), finalizado:finalizado, msg:document.getElementById('msg-descanso').innerText });
-        guardarLocal();
     }
 </script>
 </body>
