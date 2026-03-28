@@ -200,20 +200,21 @@
             } else {
                 avisoFinalTop.style.display = 'none';
 
-                // LÓGICA DE DESCANSO CORREGIDA
+                // LÓGICA DE DESCANSO / CAMBIO DE SET
                 if(t.vDesc && t.tDesc > 0) { 
                     avisoTopCambio.style.display = 'flex'; 
                     document.getElementById('descanso-tv-q').innerText = t.tDesc;
                     
                     if (t.isFinSet) {
-                        // SI ES FINAL DE SET: Se aplica par/impar
+                        // SI ES FINAL DE SET: Suma impar = "SET Y CAMBIO"
                         if (t.sumJuegos % 2 !== 0) {
                             document.getElementById('msg-tv-desc').innerText = "SET Y CAMBIO";
                         } else {
+                            // Suma par = "FIN DE SET"
                             document.getElementById('msg-tv-desc').innerText = "FIN DE SET";
                         }
                     } else {
-                        // SI NO ES FINAL DE SET: Solo es cambio normal (juegos impares durante el set)
+                        // SI NO ES FINAL DE SET: Cambio normal por juegos impares
                         document.getElementById('msg-tv-desc').innerText = "CAMBIO";
                     }
                 } else { 
