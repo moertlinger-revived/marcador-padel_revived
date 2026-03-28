@@ -94,7 +94,7 @@
 <body>
 
     <div class="brand-header">
-        <div class="title-main">PADEL VIVO <span style="color:#444">| LIVE STREAM</span></div>
+        <div class="title-main">revived <span style="color:#444">| PADEL SCORE</span></div>
         <img src="https://lh3.googleusercontent.com/u/0/d/1Sbun1g6OMSdNtM-6arDu5XUxH-NbLwwP" class="logo-top">
     </div>
 
@@ -146,7 +146,7 @@
     function updateTiempos(t) {
         if(!t) return;
         document.getElementById('val-timer').innerText = t.vPel ? t.tPel : t.tPar; 
-        document.getElementById('timer-title').innerText = t.vPel ? "CALENTAMIENTO " : "TIEMPO PARTIDO ";
+        document.getElementById('timer-title').innerText = t.vPel ? "CALENTAMIENTO  " : "TIEMPO PARTIDO  ";
         const avisoTop = document.getElementById('aviso-tv-top');
         if(t.vDesc && t.tDesc > 0) { 
             avisoTop.style.display = 'flex'; 
