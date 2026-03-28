@@ -25,13 +25,23 @@
         .t-label { font-size: 11px; color: #aaa; font-weight: 900; text-transform: uppercase; line-height: 1; }
         .t-val { font-size: 32px; color: #ccff00; font-family: monospace; font-weight: bold; line-height: 1; }
 
-        /* FORMATO DE ANUNCIOS AMARILLOS (CAMBIO Y AHORA FINALIZADO) */
+        /* MODIFICACIÓN: ANUNCIOS AMARILLOS RESALTADOS */
         .estilo-anuncio-amarillo { 
-            background: #ffcc00; color: #000; border-radius: 8px; display: none; align-items: center; justify-content: center; 
-            gap: 15px; height: 65px; padding: 0 30px; border: 3px solid #fff; margin-left: 20px; 
+            background: #ffcc00; 
+            color: #000; 
+            border-radius: 12px; 
+            display: none; 
+            align-items: center; 
+            justify-content: center; 
+            gap: 20px; 
+            height: 75px; /* Ligeramente más alto */
+            padding: 0 45px; 
+            border: 4px solid #fff; 
+            margin-left: 20px; 
+            box-shadow: inset 0 0 10px rgba(0,0,0,0.3), 0 0 20px rgba(255, 204, 0, 0.4);
         }
-        .msg-top { font-size: 28px; font-weight: 900; text-transform: uppercase; }
-        .val-descanso { font-size: 38px; font-weight: 900; color: #000; font-family: monospace; }
+        .msg-top { font-size: 36px; font-weight: 900; text-transform: uppercase; letter-spacing: 1px; }
+        .val-descanso { font-size: 48px; font-weight: 900; color: #000; font-family: 'Arial Black', sans-serif; }
 
         /* CONTENEDOR ALERTAS PUNTOS */
         .contenedor-alertas-puntos {
@@ -97,7 +107,7 @@
 <body>
 
     <div class="brand-header">
-        <div class="title-main">PADEL VIVO <span style="color:#444">| LIVE STREAM</span></div>
+        <div class="title-main">revived <span style="color:#444">| LIVE SCORE</span></div>
         <img src="https://lh3.googleusercontent.com/u/0/d/1Sbun1g6OMSdNtM-6arDu5XUxH-NbLwwP" class="logo-top">
     </div>
 
@@ -176,7 +186,6 @@
         tiebreakActivo = t.tiebreak;
         partidoFinalizadoGlobal = t.modoFinal || t.finalizado;
 
-        // LÓGICA SECUENCIAL
         if(t.cartelGigante) {
             cartelGigante.style.display = 'flex';
             avisoFinalTop.style.display = 'none';
@@ -184,24 +193,18 @@
             avisoTb.style.display = 'none';
         } else {
             cartelGigante.style.display = 'none';
-            
-            // Si el gigante se fue, verificamos si mostrar el banner amarillo de Final
             if(partidoFinalizadoGlobal) {
                 avisoFinalTop.style.display = 'flex';
                 avisoTopCambio.style.display = 'none';
                 avisoTb.style.display = 'none';
             } else {
                 avisoFinalTop.style.display = 'none';
-                
-                // Cambio de lado normal
                 if(t.vDesc && t.tDesc > 0) { 
                     avisoTopCambio.style.display = 'flex'; 
                     document.getElementById('descanso-tv-q').innerText = t.tDesc; 
                 } else { 
                     avisoTopCambio.style.display = 'none'; 
                 }
-
-                // Tiebreak normal
                 if(tiebreakActivo) {
                     avisoTb.style.display = 'flex';
                     avisoTb.innerText = t.esSTB ? "SUPER TIE-BREAK" : "TIE-BREAK";
@@ -223,7 +226,6 @@
         document.getElementById('msg-tv-desc').innerText = d.msg;
         
         const avisoOro = document.getElementById('aviso-oro');
-        // El Oro solo aparece si no hay tiebreak Y el partido no ha terminado
         if(d.oro && !tiebreakActivo && !partidoFinalizadoGlobal) {
             avisoOro.style.display = 'flex';
         } else {
