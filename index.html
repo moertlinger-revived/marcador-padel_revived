@@ -2,44 +2,49 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>TV DISPLAY - V34 ESTABLE</title>
+    <title>TV DISPLAY - V36 FINAL DISEÑO</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
     <style>
         body { margin: 0; background: #000; font-family: 'Segoe UI', sans-serif; color: #fff; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; overflow: hidden; }
         
-        /* CARTEL GIGANTE - AHORA TOTALMENTE INDEPENDIENTE */
-        #cartel-final { 
-            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; 
-            background: #000; z-index: 9999; display: none; 
-            flex-direction: column; align-items: center; justify-content: center; 
-            border: 30px solid #ccff00; box-sizing: border-box;
-        }
-        .txt-final-gigante { font-size: 120px; font-weight: 900; color: #ccff00; text-align: center; line-height: 0.9; animation: titileo-final 0.6s infinite alternate; }
-        @keyframes titileo-final { from { opacity: 1; } to { opacity: 0.4; } }
-
-        /* ESTRUCTURA PRINCIPAL */
+        /* CABECERA */
         .brand-header { width: 950px; height: 100px; display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; border-bottom: 2px solid #333; }
         .logo-img { max-height: 70px; }
         .title-main { font-size: 32px; font-weight: 900; color: #ccff00; margin: 0; text-transform: uppercase; }
 
+        /* BARRA DE ESTADO */
         .header-status { width: 950px; display: flex; align-items: center; height: 75px; margin-bottom: 15px; gap: 15px; }
         .timer-tv { background: #111; padding: 10px 20px; border-radius: 8px; border: 2px solid #333; min-width: 180px; text-align: center; }
         .t-val { font-size: 32px; color: #ccff00; font-family: monospace; font-weight: bold; }
 
-        /* AVISO SUPERIOR (CAMBIOS / FINAL) */
         #aviso-tv-top { 
             background: #ffcc00; color: #000; border-radius: 8px; display: none; 
             align-items: center; justify-content: center; gap: 20px; height: 70px; 
             border: 4px solid #fff; flex-grow: 1; 
         }
-        .msg-top { font-size: 35px; font-weight: 900; text-transform: uppercase; }
+        .msg-top { font-size: 32px; font-weight: 900; text-transform: uppercase; }
         .desc-top { font-size: 45px; font-family: monospace; font-weight: 900; }
 
-        #aviso-tiebreak { width: 180px; background: #d32f2f; border-radius: 8px; border: 2px solid #f00; text-align: center; display: none; height: 70px; align-items: center; justify-content: center; font-weight: 900; font-size: 22px; }
+        #aviso-tiebreak { 
+            width: 180px; background: #d32f2f; border-radius: 8px; border: 2px solid #f00; 
+            text-align: center; display: none; height: 70px; align-items: center; 
+            justify-content: center; font-weight: 900; font-size: 24px; color: #fff;
+        }
 
-        /* SCOREBOARD - POSICIONAMIENTO LIMPIO */
-        #scoreboard { width: 950px; background: #0a0a20; border: 4px solid #333; border-radius: 8px; overflow: hidden; }
+        /* SCOREBOARD CON CONTENEDOR RELATIVO */
+        #scoreboard { width: 950px; background: #0a0a20; border: 4px solid #333; border-radius: 8px; overflow: hidden; position: relative; }
+        
+        /* CARTEL FINAL REDIMENSIONADO AL TABLERO */
+        #cartel-final { 
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%; 
+            background: #000; z-index: 100; display: none; 
+            flex-direction: column; align-items: center; justify-content: center; 
+            border: 15px solid #ccff00; box-sizing: border-box;
+        }
+        .txt-final-gigante { font-size: 90px; font-weight: 900; color: #ccff00; text-align: center; line-height: 0.9; animation: titileo-final 0.6s infinite alternate; text-transform: uppercase; }
+        @keyframes titileo-final { from { opacity: 1; } to { opacity: 0.3; } }
+
         .labels-row { display: flex; background: rgba(255,255,255,0.08); font-size: 16px; color: #aaa; font-weight: bold; border-bottom: 2px solid #333; }
         .label-equipo { flex-grow: 1; padding: 15px 30px; text-align: left; }
         .label-box { width: 100px; text-align: center; padding: 15px 0; border-left: 2px solid #333; }
@@ -56,14 +61,14 @@
         .pts-cell { 
             width: 180px; display: flex; justify-content: center; align-items: center; 
             font-size: 120px; font-weight: 900; background: #c6a052; color: #000; 
-            border-left: 3px solid #333; 
+            border-left: 3px solid #333; transition: all 0.3s ease;
         }
+        .pts-cell.modo-tb { background: #000 !important; color: #c6a052 !important; }
         
         .bola { width: 25px; height: 25px; background: #ccff00; border-radius: 50%; box-shadow: 0 0 15px #ccff00; display: none; }
     </style>
 </head>
 <body>
-    <div id="cartel-final"><div class="txt-final-gigante">PARTIDO<br>FINALIZADO</div></div>
 
     <div class="brand-header">
         <div class="logo-container"><img src="https://via.placeholder.com/180x80?text=LOGO" class="logo-img"></div>
@@ -78,32 +83,28 @@
     </div>
     
     <div id="scoreboard">
+        <div id="cartel-final"><div class="txt-final-gigante">PARTIDO<br>FINALIZADO</div></div>
+
         <div class="labels-row">
             <div class="label-equipo">JUGADORES</div>
             <div class="label-box">SET 1</div>
             <div class="label-box">SET 2</div>
             <div class="label-box">SET 3</div>
-            <div style="width:180px; text-align:center; color:#c6a052; border-left: 2px solid #333;">PUNTOS</div>
+            <div style="width:180px; text-align:center; color:#c6a052; border-left: 3px solid #333;">PUNTOS</div>
         </div>
         <div class="equipo-block">
             <div class="nombres-col">
                 <div class="jugador-row"><div class="name-cell"><span id="n0">-</span><div id="b0" class="bola"></div></div></div>
                 <div class="jugador-row"><div class="name-cell"><span id="n1">-</span><div id="b1" class="bola"></div></div></div>
             </div>
-            <div class="box" id="s1-0">0</div>
-            <div class="box" id="s2-0">0</div>
-            <div class="box" id="s3-0">0</div>
-            <div class="pts-cell" id="pA">0</div>
+            <div class="box" id="s1-0">0</div><div class="box" id="s2-0">0</div><div class="box" id="s3-0">0</div><div class="pts-cell" id="pA">0</div>
         </div>
         <div class="equipo-block">
             <div class="nombres-col">
                 <div class="jugador-row"><div class="name-cell"><span id="n2">-</span><div id="b2" class="bola"></div></div></div>
                 <div class="jugador-row"><div class="name-cell"><span id="n3">-</span><div id="b3" class="bola"></div></div></div>
             </div>
-            <div class="box" id="s1-1">0</div>
-            <div class="box" id="s2-1">0</div>
-            <div class="box" id="s3-1">0</div>
-            <div class="pts-cell" id="pB">0</div>
+            <div class="box" id="s1-1">0</div><div class="box" id="s2-1">0</div><div class="box" id="s3-1">0</div><div class="pts-cell" id="pB">0</div>
         </div>
     </div>
 
@@ -126,6 +127,9 @@
         
         document.getElementById('aviso-tiebreak').style.display = (t.tiebreak && !t.modoFinal) ? 'flex' : 'none';
         document.getElementById('cartel-final').style.display = t.cartelGigante ? 'flex' : 'none';
+        
+        document.getElementById('pA').classList.toggle('modo-tb', t.tiebreak);
+        document.getElementById('pB').classList.toggle('modo-tb', t.tiebreak);
     });
 
     db.ref("marcador/actual").on("value", (snap) => {
