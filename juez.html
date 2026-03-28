@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>JUEZ PADEL CONTROL - V48</title>
+    <title>JUEZ PADEL CONTROL - V49</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
     <style>
@@ -43,7 +43,7 @@
     </style>
 </head>
 <body onload="cargarLocal()">
-    <div class="version-tag">VER. 48</div>
+    <div class="version-tag">VER. 49 - PERSISTENTE</div>
     
     <div id="cambio-lado-ctrl" class="aviso-cambio" onclick="aceptarCambio()">
         <span id="msg-descanso">CAMBIO DE LADO</span> <br>
@@ -89,8 +89,18 @@
     let pts = [0,0], historialSets = [[0,0,0], [0,0,0]], setActualIdx = 0, modo = "NORMAL", limiteTB = 6, puntoOroActivo = false, modoSTB = 0, finalizado = false;
     let saqueJugadorIdx = -1, proximoSacadorEq = [0, 2], stack = [], segP = 0, segPel = 300, runP = false, runPel = false, visPel = true, segDescanso = 0, runDescanso = false, cartelGiganteFinal = false;
 
+    // --- NUEVAS VARIABLES PARA TIEMPO CONTINUO ---
+    let startTimePartido = 0;
+    let acumuladoPasado = 0;
+
     setInterval(() => {
-        if(runP) segP++; if(runPel && segPel > 0) segPel--;
+        // Cálculo del tiempo transcurrido exacto del partido
+        if(runP && startTimePartido > 0) {
+            let ahora = Date.now();
+            segP = acumuladoPasado + Math.floor((ahora - startTimePartido) / 1000);
+        }
+
+        if(runPel && segPel > 0) segPel--;
         if(runDescanso && segDescanso > 0) { segDescanso--; document.getElementById('reloj-descanso').innerText = segDescanso; }
         else if(segDescanso === 0 && runDescanso) { aceptarCambio(); }
         enviarTiempos();
@@ -107,8 +117,14 @@
 
     function sumar(eq) {
         if(finalizado) return;
-        stack.push(JSON.stringify({pts:[...pts], h:[[...historialSets[0]],[...historialSets[1]]], sIdx:setActualIdx, m:modo, sq:saqueJugadorIdx, pS:[...proximoSacadorEq], oro: puntoOroActivo, mstb: modoSTB, f: finalizado, rP: runP, cg: cartelGiganteFinal, ltb: limiteTB}));
-        if(!runP && !visPel) runP = true;
+        // Se añade lTB, lTB, sTP (startTimePartido) y acP (acumuladoPasado) al historial para que el deshacer no corrompa el tiempo
+        stack.push(JSON.stringify({pts:[...pts], h:[[...historialSets[0]],[...historialSets[1]]], sIdx:setActualIdx, m:modo, sq:saqueJugadorIdx, pS:[...proximoSacadorEq], oro: puntoOroActivo, mstb: modoSTB, f: finalizado, rP: runP, cg: cartelGiganteFinal, ltb: limiteTB, sTP: startTimePartido, acP: acumuladoPasado, segP: segP}));
+        
+        if(!runP && !visPel) {
+            runP = true;
+            startTimePartido = Date.now();
+        }
+
         let ot = eq === 0 ? 1 : 0;
         if(modo === "NORMAL") {
             if(pts[eq]<3) pts[eq]++;
@@ -174,7 +190,22 @@
     function dispararAviso(m, s) { runDescanso = (s > 0); segDescanso = s; document.getElementById('msg-descanso').innerText = m; document.getElementById('cambio-lado-ctrl').style.display = "block"; }
     function cambiarReglaTB() { limiteTB = (limiteTB === 6) ? 5 : 6; render(); }
     function cicloSTB() { modoSTB = (modoSTB + 1) % 3; render(); }
-    function toggleTimer(t) { if(t==='partido') runP=!runP; else runPel=!runPel; }
+    
+    function toggleTimer(t) { 
+        if(t==='partido') {
+            runP = !runP;
+            if(runP) {
+                startTimePartido = Date.now();
+            } else {
+                acumuladoPasado = segP;
+                startTimePartido = 0;
+            }
+        } else { 
+            runPel = !runPel; 
+        } 
+        render(); // Fuerza guardado en LocalStorage
+    }
+
     function resetTimer(t) { if(t==='peloteo') segPel=300; }
     function toggleVisPeloteo() { visPel = !visPel; render(); }
     function togglePuntoOro() { puntoOroActivo = !puntoOroActivo; render(); }
@@ -182,10 +213,41 @@
     function cambiarNombre(i) { let n = prompt("Nombre:"); if(n) document.getElementById('n'+i).innerText = n.toUpperCase(); render(); }
     function rotarSaqueNormal() { let sigEq = (saqueJugadorIdx < 2) ? 1 : 0; if(saqueJugadorIdx===0||saqueJugadorIdx===1) proximoSacadorEq[0]=(saqueJugadorIdx===0)?1:0; else if(saqueJugadorIdx===2||saqueJugadorIdx===3) proximoSacadorEq[1]=(saqueJugadorIdx===2)?3:2; saqueJugadorIdx = (sigEq===0)?proximoSacadorEq[0]:proximoSacadorEq[1]; }
     function rotarSaqueTB() { if(saqueJugadorIdx < 2) { saqueJugadorIdx = proximoSacadorEq[1]; proximoSacadorEq[1] = (proximoSacadorEq[1] === 2) ? 3 : 2; } else { saqueJugadorIdx = proximoSacadorEq[0]; proximoSacadorEq[0] = (proximoSacadorEq[0] === 0) ? 1 : 0; } }
-    function deshacer() { if(stack.length>0) { let e=JSON.parse(stack.pop()); pts=e.pts; historialSets=e.h; setActualIdx=e.sIdx; modo=e.m; saqueJugadorIdx=e.sq; proximoSacadorEq=e.pS; puntoOroActivo=e.oro; modoSTB=e.mstb; finalizado=e.f; runP=e.rP; cartelGiganteFinal = e.cg; limiteTB = e.ltb || 6; render(); } }
+    
+    function deshacer() { 
+        if(stack.length>0) { 
+            let e=JSON.parse(stack.pop()); 
+            pts=e.pts; historialSets=e.h; setActualIdx=e.sIdx; modo=e.m; saqueJugadorIdx=e.sq; proximoSacadorEq=e.pS; puntoOroActivo=e.oro; modoSTB=e.mstb; finalizado=e.f; runP=e.rP; cartelGiganteFinal = e.cg; limiteTB = e.ltb || 6; 
+            startTimePartido = e.sTP || 0; acumuladoPasado = e.acP || 0; segP = e.segP || 0; 
+            render(); 
+        } 
+    }
+
     function resetTotal() { if(confirm("RESET?")) { localStorage.clear(); db.ref("marcador").remove(); location.reload(); } }
-    function guardarLocal() { localStorage.setItem('padel_v48', JSON.stringify({pts, historialSets, setActualIdx, modo, modoSTB, finalizado, saqueJugadorIdx, proximoSacadorEq, segP, segPel, limiteTB, puntoOroActivo, names:[document.getElementById('n0').innerText,document.getElementById('n1').innerText,document.getElementById('n2').innerText,document.getElementById('n3').innerText]})); }
-    function cargarLocal() { let b = JSON.parse(localStorage.getItem('padel_v48')); if(b) { pts=b.pts; historialSets=b.historialSets; setActualIdx=b.setActualIdx; modo=b.modo; modoSTB=b.modoSTB; finalizado=b.finalizado; saqueJugadorIdx=b.saqueJugadorIdx; proximoSacadorEq=b.proximoSacadorEq; segP=b.segP; segPel=b.segPel || 300; limiteTB=b.limiteTB || 6; puntoOroActivo=b.puntoOroActivo || false; b.names.forEach((n,i) => document.getElementById('n'+i).innerText=n); render(); } }
+    
+    function guardarLocal() { 
+        localStorage.setItem('padel_v48', JSON.stringify({
+            pts, historialSets, setActualIdx, modo, modoSTB, finalizado, saqueJugadorIdx, proximoSacadorEq, segP, segPel, limiteTB, puntoOroActivo, 
+            runP, startTimePartido, acumuladoPasado,
+            names:[document.getElementById('n0').innerText,document.getElementById('n1').innerText,document.getElementById('n2').innerText,document.getElementById('n3').innerText]
+        })); 
+    }
+
+    function cargarLocal() { 
+        let b = JSON.parse(localStorage.getItem('padel_v48')); 
+        if(b) { 
+            pts=b.pts; historialSets=b.historialSets; setActualIdx=b.setActualIdx; modo=b.modo; modoSTB=b.modoSTB; finalizado=b.finalizado; saqueJugadorIdx=b.saqueJugadorIdx; proximoSacadorEq=b.proximoSacadorEq; segPel=b.segPel || 300; limiteTB=b.limiteTB || 6; puntoOroActivo=b.puntoOroActivo || false; 
+            
+            // Carga de los nuevos valores de tiempo
+            segP = b.segP || 0; 
+            runP = b.runP || false;
+            startTimePartido = b.startTimePartido || 0;
+            acumuladoPasado = b.acumuladoPasado || 0;
+
+            b.names.forEach((n,i) => document.getElementById('n'+i).innerText=n); 
+            render(); 
+        } 
+    }
 
     function render() {
         const l = ["0","15","30","40","Ad"];
