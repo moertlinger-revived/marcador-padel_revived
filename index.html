@@ -146,7 +146,7 @@
     function updateTiempos(t) {
         if(!t) return;
         document.getElementById('val-timer').innerText = t.vPel ? t.tPel : t.tPar; 
-        document.getElementById('timer-title').innerText = t.vPel ? "CALENTAMIENTO" : "TIEMPO PARTIDO";
+        document.getElementById('timer-title').innerText = t.vPel ? "CALENTAMIENTO  " : "TIEMPO PARTIDO  ";
         const avisoTop = document.getElementById('aviso-tv-top');
         if(t.vDesc && t.tDesc > 0) { 
             avisoTop.style.display = 'flex'; 
