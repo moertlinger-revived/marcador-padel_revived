@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>revived DISPLAY - V2.6.0 Final</title>
+    <title>TV DISPLAY - V25 TB ANIMATED</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
     <style>
@@ -13,11 +13,22 @@
         .t-lab { font-size: 9px; color: #aaa; text-transform: uppercase; font-weight: bold; display: block; }
         .t-val { font-size: 24px; color: #ccff00; font-family: monospace; font-weight: bold; }
 
-        #aviso-tv-top { background: #ffcc00; color: #000; border-radius: 6px; display: none; align-items: center; justify-content: center; gap: 15px; height: 52px; border: 2px solid #fff; width: 560px; flex-shrink: 0; }
+        #aviso-tv-top { background: #ffcc00; color: #000; border-radius: 6px; display: none; align-items: center; justify-content: center; gap: 15px; height: 52px; border: 2px solid #fff; width: 595px; flex-shrink: 0; }
         .msg-top { font-size: 16px; font-weight: 900; text-transform: uppercase; white-space: nowrap; }
         .desc-top { font-size: 30px; font-family: monospace; font-weight: 900; }
 
-        #aviso-tiebreak { width: 160px; background: #d32f2f; border-radius: 6px; border: 1px solid #f00; text-align: center; display: none; height: 52px; align-items: center; justify-content: center; flex-shrink: 0; margin-left: auto; }
+        /* AVISO TIE-BREAK CON ANIMACIÓN */
+        #aviso-tiebreak { 
+            width: 160px; background: #d32f2f; border-radius: 6px; border: 1px solid #f00; 
+            text-align: center; display: none; height: 52px; align-items: center; justify-content: center; 
+            flex-shrink: 0; margin-left: auto;
+            animation: pulse-red 1.5s infinite ease-in-out;
+        }
+        @keyframes pulse-red {
+            0% { background: #d32f2f; box-shadow: 0 0 5px #f00; }
+            50% { background: #ff0000; box-shadow: 0 0 20px #f00; }
+            100% { background: #d32f2f; box-shadow: 0 0 5px #f00; }
+        }
         .tb-txt { font-size: 16px; font-weight: 900; color: #fff; text-transform: uppercase; }
 
         #scoreboard { width: 950px; background: #0a0a20; border: 3px solid #333; }
@@ -34,18 +45,18 @@
         
         .box { width: 90px; display: flex; justify-content: center; align-items: center; font-size: 60px; font-weight: 900; border-left: 2px solid #333; }
         
-        /* ESTILO NORMAL PUNTOS (Fondo dorado, texto negro) */
+        /* PUNTOS NORMALES */
         .pts-cell { 
             width: 160px; display: flex; justify-content: center; align-items: center; 
             font-size: 100px; font-weight: 900; background: #c6a052; color: #000; 
-            border-left: 2px solid #333; transition: all 0.5s ease;
+            border-left: 2px solid #333; transition: all 0.4s ease;
         }
 
-        /* ESTILO INVERTIDO PARA TIE-BREAK (Fondo negro, texto dorado) */
+        /* PUNTOS TIE-BREAK INVERTIDOS */
         .pts-cell.modo-tiebreak {
             background: #000;
             color: #c6a052;
-            text-shadow: 0 0 15px rgba(198, 160, 82, 0.5);
+            text-shadow: 0 0 10px rgba(198, 160, 82, 0.7);
         }
         
         .bola { width: 20px; height: 20px; background: #ccff00; border-radius: 50%; margin-left: 15px; display: none; box-shadow: 0 0 15px #ccff00; }
@@ -63,9 +74,8 @@
     <div id="scoreboard">
         <div class="labels-row">
             <div class="label-equipo">EQUIPOS / JUGADORES</div><div class="label-box">SET 1</div><div class="label-box">SET 2</div><div class="label-box">SET 3</div>
-            <div id="label-puntos-header" style="width:160px; text-align:center; padding:10px 0; border-left:1px solid #333; color:#c6a052">PUNTOS</div>
+            <div style="width:160px; text-align:center; padding:10px 0; border-left:1px solid #333; color:#c6a052">PUNTOS</div>
         </div>
-        
         <div class="equipo-block">
             <div class="nombres-col">
                 <div class="jugador-row"><div class="name-cell"><span id="n0">-</span><div id="b0" class="bola"></div></div></div>
@@ -74,7 +84,6 @@
             <div class="box" id="s1-0">0</div><div class="box" id="s2-0">0</div><div class="box" id="s3-0">0</div>
             <div class="pts-cell" id="pA">0</div>
         </div>
-
         <div class="equipo-block">
             <div class="nombres-col">
                 <div class="jugador-row"><div class="name-cell"><span id="n2">-</span><div id="b2" class="bola"></div></div></div>
@@ -106,7 +115,6 @@
         document.getElementById('pA').innerText=d.p0; document.getElementById('pB').innerText=d.p1;
         document.getElementById('msg-tv-desc').innerText = d.msg;
         
-        // Inversión de colores si es Tie-break
         const esTB = (d.modo === "TIE-BREAK");
         document.getElementById('pA').classList.toggle('modo-tiebreak', esTB);
         document.getElementById('pB').classList.toggle('modo-tiebreak', esTB);
