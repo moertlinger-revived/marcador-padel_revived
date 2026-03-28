@@ -3,37 +3,48 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>JUEZ PADEL PRO - V33 FINAL</title>
+    <title>JUEZ PADEL CONTROL - V38 FINAL</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
     <style>
         * { box-sizing: border-box; touch-action: manipulation; }
         body { font-family: sans-serif; background: #000; color: #fff; margin: 0; padding: 5px; text-align: center; }
+        
+        /* CABECERA CONFIG */
         .encabezado { background: #222; padding: 10px; border-radius: 10px; margin-bottom: 5px; display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; }
-        .config-regla { background: #333; color: #fff; border: 2px solid #555; padding: 10px; border-radius: 5px; font-size: 11px; font-weight: bold; cursor: pointer; min-width: 90px; }
+        .config-regla { background: #333; color: #fff; border: 2px solid #555; padding: 10px; border-radius: 5px; font-size: 11px; font-weight: bold; cursor: pointer; min-width: 95px; }
         .config-regla.activo { background: #ccff00; color: #000; border-color: #fff; }
         .btn-reset-total { background: #d32f2f; color: #fff; border: 2px solid #f00; padding: 10px; border-radius: 5px; font-size: 11px; font-weight: bold; cursor: pointer; }
+
+        /* TIEMPOS */
         .zona-tiempos { display: flex; justify-content: space-around; background: #111; padding: 8px; border-radius: 10px; margin-bottom: 5px; border: 1px solid #333; }
         .timer-box { display: flex; flex-direction: column; align-items: center; gap: 4px; }
-        .timer-label { font-size: 8px; color: #aaa; font-weight: bold; }
+        .timer-label { font-size: 8px; color: #aaa; font-weight: bold; text-transform: uppercase; }
         .timer-val { font-family: monospace; font-size: 18px; color: #ccff00; font-weight: bold; }
-        .btn-t { font-size: 9px; padding: 4px 8px; background: #444; color: #fff; border: none; border-radius: 3px; cursor: pointer; }
+        .btn-t { font-size: 10px; padding: 5px 10px; background: #444; color: #fff; border: none; border-radius: 3px; cursor: pointer; }
+
+        /* JUGADORES Y PUNTOS */
         .equipo-contenedor { background: #111; border: 2px solid #333; border-radius: 12px; padding: 10px; margin-bottom: 8px; }
         .fila-jugador { display: flex; align-items: center; justify-content: space-between; background: #222; margin-bottom: 5px; padding: 8px; border-radius: 8px; border: 2px solid transparent; }
         .fila-jugador.sirviendo { border-color: #ccff00; background: #2a2a00; }
-        .nombre-j { font-size: 14px; font-weight: bold; flex-grow: 1; text-align: left; }
+        .nombre-j { font-size: 14px; font-weight: bold; flex-grow: 1; text-align: left; overflow: hidden; }
         .puntos-display { font-size: 55px; font-weight: 900; color: #c6a052; margin: 5px 0; }
         .btn-punto { width: 100%; padding: 15px; background: #c6a052; border: none; border-radius: 10px; font-size: 18px; font-weight: bold; color: #000; }
-        
-        .aviso-cambio { background: #ffcc00; color: #000; padding: 20px; font-size: 22px; font-weight: 900; border-radius: 12px; position: absolute; top: 10px; left: 10px; width: calc(100% - 20px); z-index: 100; display: none; border: 5px solid #fff; box-shadow: 0 0 30px rgba(0,0,0,0.5); cursor: pointer; }
-        .titileo { animation: flash 0.5s infinite alternate; }
-        @keyframes flash { from { opacity: 1; } to { opacity: 0.4; } }
+
+        /* AVISO FLOTANTE */
+        .aviso-cambio { background: #ffcc00; color: #000; padding: 20px; font-size: 22px; font-weight: 900; border-radius: 12px; position: fixed; top: 10%; left: 5%; width: 90%; z-index: 1000; display: none; border: 5px solid #fff; box-shadow: 0 0 40px rgba(0,0,0,0.8); cursor: pointer; }
+        .titileo { animation: flash-aviso 0.5s infinite alternate; }
+        @keyframes flash-aviso { from { background: #ffcc00; } to { background: #fff; } }
     </style>
 </head>
 <body onload="cargarLocal()">
-    <div id="cambio-lado" class="aviso-cambio" onclick="aceptarCambio()">
+
+    <div id="cambio-lado-ctrl" class="aviso-cambio" onclick="aceptarCambio()">
         <span id="msg-descanso">CAMBIO DE LADO</span> <br>
-        <span id="reloj-descanso-box" style="font-size: 40px; font-family: monospace;">(<span id="reloj-descanso">90</span>s)</span>
+        <div id="reloj-descanso-box" style="font-size: 40px; font-family: monospace; margin-top: 10px;">
+            <span id="reloj-descanso">90</span>s
+        </div>
+        <div style="font-size: 12px; margin-top: 10px; font-weight: normal;">TOCA PARA CERRAR AVISO</div>
     </div>
 
     <div class="encabezado">
@@ -48,7 +59,11 @@
         <div class="timer-box">
             <span class="timer-label">CALENTAMIENTO</span>
             <span id="disp-peloteo" class="timer-val">05:00</span>
-            <div><button class="btn-t" onclick="toggleTimer('peloteo')">PLAY</button><button class="btn-t" onclick="resetTimer('peloteo')">RESET</button><button class="btn-t" onclick="toggleVisPeloteo()">👁️</button></div>
+            <div>
+                <button class="btn-t" onclick="toggleTimer('peloteo')">PLAY</button>
+                <button class="btn-t" onclick="resetTimer('peloteo')">RESET</button>
+                <button class="btn-t" onclick="toggleVisPeloteo()">👁️</button>
+            </div>
         </div>
         <div class="timer-box">
             <span class="timer-label">PARTIDO</span>
@@ -73,18 +88,25 @@
     </div>
 
 <script>
+    // CONFIGURACIÓN FIREBASE
     const firebaseConfig = { apiKey: "AIzaSyCQkDrlFCRKMYDxM54dkl24hGu-e-ZdbMs", databaseURL: "https://padel-vivo-default-rtdb.firebaseio.com", projectId: "padel-vivo" };
     firebase.initializeApp(firebaseConfig); const db = firebase.database();
 
+    // VARIABLES DE ESTADO
     let pts = [0,0], historialSets = [[0,0,0], [0,0,0]], setActualIdx = 0, modo = "NORMAL", limiteTB = 6, puntoOroActivo = false, modoSTB = 0, finalizado = false;
     let saqueJugadorIdx = -1, proximoSacadorEq = [0, 2], stack = [], segP = 0, segPel = 300, runP = false, runPel = false, visPel = true, segDescanso = 0, runDescanso = false;
     let cartelGiganteFinal = false;
 
+    // RELOJ MAESTRO
     setInterval(() => {
         if(runP) segP++;
         if(runPel && segPel > 0) segPel--;
-        if(runDescanso && segDescanso > 0) { segDescanso--; document.getElementById('reloj-descanso').innerText = segDescanso; }
-        else if(segDescanso === 0 && runDescanso) { aceptarCambio(); }
+        if(runDescanso && segDescanso > 0) { 
+            segDescanso--; 
+            document.getElementById('reloj-descanso').innerText = segDescanso; 
+        } else if(segDescanso === 0 && runDescanso) { 
+            aceptarCambio(); 
+        }
         enviarTiempos();
     }, 1000);
 
@@ -93,6 +115,7 @@
         let pm=Math.floor(segPel/60).toString().padStart(2,'0'), ps=(segPel%60).toString().padStart(2,'0');
         document.getElementById('disp-partido').innerText = `${h}:${m}:${s}`;
         document.getElementById('disp-peloteo').innerText = `${pm}:${ps}`;
+        
         db.ref("marcador/tiempos").set({ 
             tPar:`${h}:${m}:${s}`, tPel:`${pm}:${ps}`, vPel:visPel, 
             tDesc:segDescanso, vDesc:runDescanso, 
@@ -104,6 +127,7 @@
 
     function sumar(eq) {
         if(finalizado) return;
+        // Guardar estado para Deshacer
         stack.push(JSON.stringify({pts:[...pts], h:[[...historialSets[0]],[...historialSets[1]]], sIdx:setActualIdx, m:modo, sq:saqueJugadorIdx, pS:[...proximoSacadorEq], oro: puntoOroActivo, mstb: modoSTB, f: finalizado, rP: runP, cg: cartelGiganteFinal}));
         
         if(!runP && !visPel) runP = true;
@@ -116,8 +140,9 @@
             else if(pts[eq]===3 && pts[ot]===4) pts[ot]=3;
             else if(pts[eq]===4) { pts=[0,0]; ganarG(eq); }
         } else {
+            // Lógica Tie-Break
             pts[eq]++;
-            if((pts[0]+pts[1])%6===0) dispararAviso("CAMBIO LADO TB", 10);
+            if((pts[0]+pts[1])%6===0) dispararAviso("CAMBIO LADO TB", 15);
             if((pts[0]+pts[1])%2!==0) rotarSaqueTB();
 
             let meta = 7;
@@ -128,7 +153,7 @@
 
             if(pts[eq] >= meta && (pts[eq] - pts[ot]) >= 2) {
                 if(setActualIdx === 2 && modoSTB > 0) {
-                    historialSets[eq][2] = 7; historialSets[ot][2] = 6;
+                    historialSets[eq][2] = (modoSTB===1?10:11); historialSets[ot][2] = pts[ot];
                     cerrarPartido();
                 } else {
                     pts = [0,0]; ganarG(eq);
@@ -143,10 +168,11 @@
         historialSets[eq][setActualIdx]++;
         let gA = historialSets[0][setActualIdx], gB = historialSets[1][setActualIdx];
 
+        // Verificación de fin de partido
         let setsA = 0, setsB = 0;
         for(let i=0; i<3; i++) {
-            if(historialSets[0][i] > historialSets[1][i] && historialSets[0][i]>=6) setsA++;
-            if(historialSets[1][i] > historialSets[0][i] && historialSets[1][i]>=6) setsB++;
+            if(historialSets[0][i] > historialSets[1][i] && (historialSets[0][i]>=6 || (i===2 && modoSTB>0))) setsA++;
+            if(historialSets[1][i] > historialSets[0][i] && (historialSets[1][i]>=6 || (i===2 && modoSTB>0))) setsB++;
         }
 
         if(setsA === 2 || setsB === 2) {
@@ -162,72 +188,91 @@
 
     function cerrarPartido() {
         finalizado = true;
-        runP = false;
+        runP = false; 
         pts = [0,0];
         cartelGiganteFinal = true;
-        document.getElementById('cambio-lado').classList.add('titileo');
+        
+        document.getElementById('cambio-lado-ctrl').classList.add('titileo');
         document.getElementById('reloj-descanso-box').style.display = "none";
         dispararAviso("PARTIDO FINALIZADO", 0); 
         
         setTimeout(() => { 
             cartelGiganteFinal = false;
-            document.getElementById('cambio-lado').classList.remove('titileo');
+            document.getElementById('cambio-lado-ctrl').classList.remove('titileo');
             render();
         }, 15000);
     }
 
     function ganarS() { if(setActualIdx < 2) { setActualIdx++; modo=(setActualIdx===2 && modoSTB>0)?"TIE-BREAK":"NORMAL"; pts=[0,0]; } }
+    
+    // FUNCIONES AUXILIARES
+    function aceptarCambio() { 
+        runDescanso = false; segDescanso = 0; 
+        document.getElementById('cambio-lado-ctrl').style.display = "none"; 
+        render(); 
+    }
+
+    function dispararAviso(m, s) { 
+        runDescanso = (s > 0); segDescanso = s; 
+        document.getElementById('msg-descanso').innerText = m; 
+        document.getElementById('reloj-descanso-box').style.display = (s > 0) ? "block" : "none";
+        document.getElementById('cambio-lado-ctrl').style.display = "block"; 
+    }
+
+    function cambiarReglaTB() { limiteTB = (limiteTB === 6) ? 5 : 6; render(); }
+    function cicloSTB() { modoSTB = (modoSTB + 1) % 3; render(); }
+    function toggleTimer(t) { if(t==='partido') runP=!runP; else runPel=!runPel; }
+    function resetTimer(t) { if(t==='peloteo') segPel=300; }
     function toggleVisPeloteo() { visPel = !visPel; render(); }
+    function togglePuntoOro() { puntoOroActivo = !puntoOroActivo; render(); }
+    function definirSaque(idx) { saqueJugadorIdx = idx; render(); }
+    function cambiarNombre(i) { let n = prompt("Nombre:"); if(n) document.getElementById('n'+i).innerText = n.toUpperCase(); render(); }
+    
     function rotarSaqueNormal() { 
         let sigEq = (saqueJugadorIdx < 2) ? 1 : 0;
         if(saqueJugadorIdx===0||saqueJugadorIdx===1) proximoSacadorEq[0]=(saqueJugadorIdx===0)?1:0;
         else if(saqueJugadorIdx===2||saqueJugadorIdx===3) proximoSacadorEq[1]=(saqueJugadorIdx===2)?3:2;
         saqueJugadorIdx = (sigEq===0)?proximoSacadorEq[0]:proximoSacadorEq[1];
     }
-    function rotarSaqueTB() { if(saqueJugadorIdx < 2) { saqueJugadorIdx = proximoSacadorEq[1]; proximoSacadorEq[1] = (proximoSacadorEq[1] === 2) ? 3 : 2; } else { saqueJugadorIdx = proximoSacadorEq[0]; proximoSacadorEq[0] = (proximoSacadorEq[0] === 0) ? 1 : 0; } }
-    function cicloSTB() { modoSTB = (modoSTB + 1) % 3; render(); }
-    function toggleTimer(t) { if(t==='partido') runP=!runP; else runPel=!runPel; }
-    function resetTimer(t) { if(t==='peloteo') segPel=300; }
-    function togglePuntoOro() { puntoOroActivo = !puntoOroActivo; render(); }
-    function cambiarReglaTB() { limiteTB = (limiteTB === 6) ? 5 : 6; render(); }
-    function definirSaque(idx) { saqueJugadorIdx = idx; render(); }
-    function cambiarNombre(i) { let n = prompt("Nombre:"); if(n) document.getElementById('n'+i).innerText = n.toUpperCase(); render(); }
     
-    function dispararAviso(m, s) { 
-        runDescanso = (s > 0); 
-        segDescanso = s; 
-        document.getElementById('msg-descanso').innerText = m; 
-        document.getElementById('reloj-descanso-box').style.display = (s > 0) ? "inline" : "none";
-        document.getElementById('cambio-lado').style.display = "block"; 
-    }
-    
-    function aceptarCambio() { 
-        runDescanso = false; 
-        segDescanso = 0; 
-        document.getElementById('cambio-lado').style.display = "none"; 
-        render(); 
+    function rotarSaqueTB() { 
+        if(saqueJugadorIdx < 2) { 
+            saqueJugadorIdx = proximoSacadorEq[1]; 
+            proximoSacadorEq[1] = (proximoSacadorEq[1] === 2) ? 3 : 2; 
+        } else { 
+            saqueJugadorIdx = proximoSacadorEq[0]; 
+            proximoSacadorEq[0] = (proximoSacadorEq[0] === 0) ? 1 : 0; 
+        } 
     }
 
-    function resetTotal() { if(confirm("¿RESET TOTAL?")) { localStorage.clear(); db.ref("marcador").remove(); location.reload(); } }
-    
     function deshacer() { 
         if(stack.length>0) { 
             let e=JSON.parse(stack.pop()); 
             pts=e.pts; historialSets=e.h; setActualIdx=e.sIdx; modo=e.m; 
             saqueJugadorIdx=e.sq; proximoSacadorEq=e.pS; puntoOroActivo=e.oro; 
             modoSTB=e.mstb; finalizado=e.f; runP=e.rP; cartelGiganteFinal = e.cg;
-            document.getElementById('reloj-descanso-box').style.display = "inline";
             render(); 
         } 
     }
 
-    function guardarLocal() { localStorage.setItem('padel_pro_v33', JSON.stringify({pts, historialSets, setActualIdx, modo, modoSTB, finalizado, saqueJugadorIdx, proximoSacadorEq, segP, names:[document.getElementById('n0').innerText,document.getElementById('n1').innerText,document.getElementById('n2').innerText,document.getElementById('n3').innerText]})); }
+    function resetTotal() { if(confirm("¿RESET TOTAL?")) { localStorage.clear(); db.ref("marcador").remove(); location.reload(); } }
+
+    function guardarLocal() { 
+        localStorage.setItem('padel_pro_v38', JSON.stringify({
+            pts, historialSets, setActualIdx, modo, modoSTB, finalizado, 
+            saqueJugadorIdx, proximoSacadorEq, segP, limiteTB,
+            names:[document.getElementById('n0').innerText,document.getElementById('n1').innerText,document.getElementById('n2').innerText,document.getElementById('n3').innerText]
+        })); 
+    }
     
     function cargarLocal() { 
-        let b = JSON.parse(localStorage.getItem('padel_pro_v33')); 
+        let b = JSON.parse(localStorage.getItem('padel_pro_v38')); 
         if(b) { 
-            pts=b.pts; historialSets=b.historialSets; setActualIdx=b.setActualIdx; modo=b.modo; modoSTB=b.modoSTB; finalizado=b.finalizado; saqueJugadorIdx=b.saqueJugadorIdx; proximoSacadorEq=b.proximoSacadorEq; segP=b.segP;
-            b.names.forEach((n,i) => document.getElementById('n'+i).innerText=n); render();
+            pts=b.pts; historialSets=b.historialSets; setActualIdx=b.setActualIdx; modo=b.modo; 
+            modoSTB=b.modoSTB; finalizado=b.finalizado; saqueJugadorIdx=b.saqueJugadorIdx; 
+            proximoSacadorEq=b.proximoSacadorEq; segP=b.segP; limiteTB=b.limiteTB || 6;
+            b.names.forEach((n,i) => document.getElementById('n'+i).innerText=n); 
+            render();
         }
     }
 
@@ -235,13 +280,15 @@
         const l = ["0","15","30","40","Ad"];
         document.getElementById('pA').innerText = modo==="NORMAL" ? l[pts[0]] : pts[0];
         document.getElementById('pB').innerText = modo==="NORMAL" ? l[pts[1]] : pts[1];
+        
+        document.getElementById('btn-regla').innerText = `TB: ${limiteTB}-${limiteTB}`;
         document.getElementById('btn-stb').innerText = "3er SET: " + (modoSTB===0?"NORMAL":modoSTB===1?"STB(10)":"STB(11)");
         document.getElementById('btn-stb').classList.toggle('activo', modoSTB>0);
         document.getElementById('btn-oro').innerText = "ORO: " + (puntoOroActivo?"SÍ":"NO");
         document.getElementById('btn-oro').classList.toggle('activo', puntoOroActivo);
-        for(let i=0; i<4; i++) { 
-            document.getElementById(`f-j${i}`).classList.toggle('sirviendo', saqueJugadorIdx===i); 
-        }
+        
+        for(let i=0; i<4; i++) document.getElementById(`f-j${i}`).classList.toggle('sirviendo', saqueJugadorIdx===i); 
+        
         db.ref("marcador/actual").set({ 
             n0:document.getElementById('n0').innerText, n1:document.getElementById('n1').innerText, 
             n2:document.getElementById('n2').innerText, n3:document.getElementById('n3').innerText, 
