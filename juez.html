@@ -136,4 +136,89 @@
             const e = JSON.parse(backup);
             pts = e.pts; historialSets = e.historialSets; setActualIdx = e.setActualIdx;
             modo = e.modo; limiteTB = e.limiteTB; puntoOroActivo = e.puntoOroActivo;
-            saqueJugadorIdx = e.saqueJugador
+            saqueJugadorIdx = e.saqueJugadorIdx; proximoSacadorEq = e.proximoSacadorEq;
+            stack = e.stack || []; segP = e.segP || 0;
+            document.getElementById('n0').innerText = e.n0; document.getElementById('n1').innerText = e.n1;
+            document.getElementById('n2').innerText = e.n2; document.getElementById('n3').innerText = e.n3;
+            render();
+        }
+    }
+
+    function resetTotal() {
+        if(confirm("¿RESET TOTAL? Se borrarán nombres, marcador y tiempos.")) {
+            localStorage.removeItem('padel_pro_backup');
+            db.ref("marcador").remove(); // Limpia Firebase
+            location.reload(); // Reinicia la app limpia
+        }
+    }
+
+    // --- LÓGICA DE JUEGO ---
+    function sumar(eq) {
+        stack.push(JSON.stringify({pts:[...pts], h:[[...historialSets[0]],[...historialSets[1]]], sIdx:setActualIdx, m:modo, sq:saqueJugadorIdx, pS:[...proximoSacadorEq], oro: puntoOroActivo, lim: limiteTB}));
+        if(!runP && !visPel) runP = true;
+        let ot = eq === 0 ? 1 : 0;
+        
+        if(modo === "NORMAL") {
+            if(pts[eq]<3) pts[eq]++;
+            else if(pts[eq]===3 && pts[ot]<3) { pts=[0,0]; ganarG(eq); }
+            else if(pts[eq]===3 && pts[ot]===3) { if(puntoOroActivo) { pts=[0,0]; ganarG(eq); } else pts[eq]=4; }
+            else if(pts[eq]===3 && pts[ot]===4) pts[ot]=3;
+            else if(pts[eq]===4) { pts=[0,0]; ganarG(eq); }
+        } else {
+            pts[eq]++;
+            if((pts[0] + pts[1]) % 6 === 0) dispararAviso("CAMBIO DE LADO (TB)", 10);
+            if((pts[0]+pts[1]) % 2 !== 0) rotarSaqueTB();
+            if(pts[eq]>=7 && (pts[eq]-pts[ot])>=2) { pts=[0,0]; ganarG(eq); }
+        }
+        render();
+    }
+
+    function ganarG(eq) {
+        historialSets[eq][setActualIdx]++;
+        let gA = historialSets[0][setActualIdx], gB = historialSets[1][setActualIdx];
+        let totalG = gA + gB;
+        if(saqueJugadorIdx === 0 || saqueJugadorIdx === 1) proximoSacadorEq[0] = (saqueJugadorIdx === 0) ? 1 : 0;
+        else if(saqueJugadorIdx === 2 || saqueJugadorIdx === 3) proximoSacadorEq[1] = (saqueJugadorIdx === 2) ? 3 : 2;
+        let siguienteEq = (saqueJugadorIdx < 2) ? 1 : 0;
+        saqueJugadorIdx = (siguienteEq === 0) ? proximoSacadorEq[0] : proximoSacadorEq[1];
+        if(totalG === 1) dispararAviso("SOLO CAMBIO DE LADO", 10);
+        else if((gA>=6||gB>=6) && Math.abs(gA-gB)>=2 || modo==="TIE-BREAK") { dispararAviso((totalG % 2 !== 0) ? "SET Y CAMBIO" : "SET FINALIZADO", 120); ganarS(); }
+        else if(totalG % 2 !== 0) dispararAviso("CAMBIO DE LADO", 90);
+        if(gA === limiteTB && gB === limiteTB) modo = "TIE-BREAK";
+    }
+
+    function dispararAviso(msg, seg) { cambioVisible = true; segDescanso = seg; runDescanso = true; document.getElementById('msg-descanso').innerText = msg; document.getElementById('cambio-lado').style.display = "block"; }
+    function aceptarCambio() { cambioVisible = false; runDescanso = false; document.getElementById('cambio-lado').style.display = "none"; render(); }
+    function toggleTimer(t) { if(t==='partido') runP=!runP; else runPel=!runPel; }
+    function resetTimer(t) { if(t==='peloteo') segPel=300; }
+    function toggleVisPeloteo() { visPel = !visPel; render(); }
+    function rotarSaqueTB() { if(saqueJugadorIdx < 2) { saqueJugadorIdx = proximoSacadorEq[1]; proximoSacadorEq[1] = (proximoSacadorEq[1] === 2) ? 3 : 2; } else { saqueJugadorIdx = proximoSacadorEq[0]; proximoSacadorEq[0] = (proximoSacadorEq[0] === 0) ? 1 : 0; } }
+    function deshacer() { if(stack.length > 0) { let e = JSON.parse(stack.pop()); pts=e.pts; historialSets=e.h; setActualIdx=e.sIdx; modo=e.m; saqueJugadorIdx=e.sq; proximoSacadorEq=e.pS; puntoOroActivo=e.oro; limiteTB=e.lim; render(); } }
+    function togglePuntoOro() { puntoOroActivo = !puntoOroActivo; render(); }
+    function cambiarReglaTB() { limiteTB = (limiteTB === 6) ? 5 : 6; render(); }
+    function definirSaque(idx) { saqueJugadorIdx = idx; render(); }
+    function cambiarNombre(i) { let n = prompt("Nombre:"); if(n) document.getElementById('n'+i).innerText = n.toUpperCase(); render(); }
+    function ganarS() { if(setActualIdx < 2) { setActualIdx++; modo="NORMAL"; pts=[0,0]; render(); } }
+
+    function render() {
+        const l = ["0","15","30","40","Ad"];
+        document.getElementById('pA').innerText = modo==="NORMAL" ? l[pts[0]] : pts[0];
+        document.getElementById('pB').innerText = modo==="NORMAL" ? l[pts[1]] : pts[1];
+        document.getElementById('btn-oro').innerText = "ORO: " + (puntoOroActivo ? "SÍ" : "NO");
+        document.getElementById('btn-oro').className = "config-regla" + (puntoOroActivo ? " activo" : "");
+        document.getElementById('btn-regla').innerText = "TB: " + limiteTB + "-" + limiteTB;
+        document.getElementById('btn-regla').className = "config-regla" + (limiteTB === 5 ? " activo" : "");
+        for(let i=0; i<4; i++) {
+            document.getElementById(`btn-s${i}`).classList.toggle('activo', saqueJugadorIdx === i);
+            document.getElementById(`f-j${i}`).classList.toggle('sirviendo', saqueJugadorIdx === i);
+        }
+        db.ref("marcador/actual").set({
+            n0: document.getElementById('n0').innerText, n1: document.getElementById('n1').innerText, n2: document.getElementById('n2').innerText, n3: document.getElementById('n3').innerText,
+            h0: historialSets[0], h1: historialSets[1], p0: document.getElementById('pA').innerText, p1: document.getElementById('pB').innerText,
+            sIdx: saqueJugadorIdx, modo: modo, oro: (puntoOroActivo && pts[0]===3 && pts[1]===3), msg: document.getElementById('msg-descanso').innerText
+        });
+        guardarLocal(); // Guardamos backup en cada cambio
+    }
+</script>
+</body>
+</html>
