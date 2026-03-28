@@ -25,7 +25,7 @@
         .t-label { font-size: 11px; color: #aaa; font-weight: 900; text-transform: uppercase; line-height: 1; }
         .t-val { font-size: 32px; color: #ccff00; font-family: monospace; font-weight: bold; line-height: 1; }
 
-        /* MODIFICACIÓN: ANUNCIOS AMARILLOS RESALTADOS */
+        /* ANUNCIOS AMARILLOS RESALTADOS */
         .estilo-anuncio-amarillo { 
             background: #ffcc00; 
             color: #000; 
@@ -34,7 +34,7 @@
             align-items: center; 
             justify-content: center; 
             gap: 20px; 
-            height: 75px; /* Ligeramente más alto */
+            height: 75px; 
             padding: 0 45px; 
             border: 4px solid #fff; 
             margin-left: 20px; 
@@ -107,7 +107,7 @@
 <body>
 
     <div class="brand-header">
-        <div class="title-main">revived <span style="color:#444">| LIVE SCORE</span></div>
+        <div class="title-main">PADEL VIVO <span style="color:#444">| LIVE STREAM</span></div>
         <img src="https://lh3.googleusercontent.com/u/0/d/1Sbun1g6OMSdNtM-6arDu5XUxH-NbLwwP" class="logo-top">
     </div>
 
@@ -199,12 +199,22 @@
                 avisoTb.style.display = 'none';
             } else {
                 avisoFinalTop.style.display = 'none';
+
+                // LÓGICA DE DESCANSO / CAMBIO DE SET
                 if(t.vDesc && t.tDesc > 0) { 
                     avisoTopCambio.style.display = 'flex'; 
-                    document.getElementById('descanso-tv-q').innerText = t.tDesc; 
+                    document.getElementById('descanso-tv-q').innerText = t.tDesc;
+                    
+                    // Si la suma es impar es CAMBIO, si es par es FIN DE SET
+                    if (t.sumJuegos % 2 !== 0) {
+                        document.getElementById('msg-tv-desc').innerText = "CAMBIO";
+                    } else {
+                        document.getElementById('msg-tv-desc').innerText = "FIN DE SET";
+                    }
                 } else { 
                     avisoTopCambio.style.display = 'none'; 
                 }
+
                 if(tiebreakActivo) {
                     avisoTb.style.display = 'flex';
                     avisoTb.innerText = t.esSTB ? "SUPER TIE-BREAK" : "TIE-BREAK";
@@ -223,7 +233,6 @@
         document.getElementById('n0').innerText=d.n0; document.getElementById('n1').innerText=d.n1;
         document.getElementById('n2').innerText=d.n2; document.getElementById('n3').innerText=d.n3;
         document.getElementById('pA').innerText=d.p0; document.getElementById('pB').innerText=d.p1;
-        document.getElementById('msg-tv-desc').innerText = d.msg;
         
         const avisoOro = document.getElementById('aviso-oro');
         if(d.oro && !tiebreakActivo && !partidoFinalizadoGlobal) {
