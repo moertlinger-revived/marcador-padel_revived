@@ -2,113 +2,67 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>TV DISPLAY - V32 PROFESIONAL</title>
+    <title>TV DISPLAY - V33 PRO</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
     <style>
         body { margin: 0; background: #000; font-family: 'Segoe UI', sans-serif; color: #fff; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; overflow: hidden; }
+        .brand-header { width: 950px; height: 100px; display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; border-bottom: 2px solid #333; }
+        .logo-img { max-height: 80px; }
+        .title-main { font-size: 32px; font-weight: 900; color: #ccff00; margin: 0; }
         
-        /* HEADER DISEÑO */
-        .brand-header { width: 950px; height: 100px; display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; border-bottom: 2px solid #333; padding-bottom: 10px; }
-        .logo-container { width: 180px; height: 80px; display: flex; align-items: center; justify-content: flex-start; }
-        .logo-img { max-height: 80px; max-width: 100%; object-fit: contain; }
-        .title-container { flex-grow: 1; text-align: center; }
-        .title-main { font-size: 32px; font-weight: 900; text-transform: uppercase; color: #ccff00; letter-spacing: 2px; margin: 0; }
-        .title-sub { font-size: 14px; color: #aaa; text-transform: uppercase; margin: 0; }
-
         .header-status { width: 950px; display: flex; align-items: center; height: 70px; margin-bottom: 10px; gap: 10px; }
         .timer-tv { background: #111; padding: 5px 15px; border-radius: 8px; border: 2px solid #333; text-align: center; width: 180px; }
-        .t-lab { font-size: 10px; color: #aaa; text-transform: uppercase; font-weight: bold; display: block; }
         .t-val { font-size: 28px; color: #ccff00; font-family: monospace; font-weight: bold; }
 
-        /* AVISO SUPERIOR GRANDE */
-        #aviso-tv-top { 
-            background: #ffcc00; 
-            color: #000; 
-            border-radius: 8px; 
-            display: none; 
-            align-items: center; 
-            justify-content: center; 
-            gap: 20px; 
-            height: 65px; 
-            border: 3px solid #fff; 
-            flex-grow: 1; 
-            box-shadow: 0 0 20px rgba(255,204,0,0.4);
-        }
-        .msg-top { font-size: 32px; font-weight: 900; text-transform: uppercase; letter-spacing: -1px; }
+        /* AVISO SUPERIOR */
+        #aviso-tv-top { background: #ffcc00; color: #000; border-radius: 8px; display: none; align-items: center; justify-content: center; gap: 20px; height: 65px; border: 3px solid #fff; flex-grow: 1; }
+        .msg-top { font-size: 32px; font-weight: 900; text-transform: uppercase; }
         .desc-top { font-size: 40px; font-family: monospace; font-weight: 900; }
 
-        /* EFECTO TITILEO PARA FINALIZADO */
-        .flash-anim { animation: flash-bg 0.6s infinite alternate; }
-        @keyframes flash-bg { 
-            from { background: #ffcc00; color: #000; } 
-            to { background: #000; color: #ffcc00; border-color: #ffcc00; } 
-        }
+        /* CARTEL GIGANTE FINAL */
+        #cartel-final { position: fixed; top:0; left:0; width:100%; height:100%; background: #000; z-index: 1000; display: none; flex-direction: column; align-items: center; justify-content: center; border: 20px solid #ccff00; }
+        .txt-final-gigante { font-size: 100px; font-weight: 900; color: #ccff00; text-align: center; animation: titileo-final 0.6s infinite alternate; }
+        @keyframes titileo-final { from { opacity: 1; } to { opacity: 0.5; } }
 
-        #aviso-tiebreak { width: 160px; background: #d32f2f; border-radius: 8px; border: 2px solid #f00; text-align: center; display: none; height: 65px; align-items: center; justify-content: center; animation: pulse-red 1.5s infinite ease-in-out; }
-        @keyframes pulse-red { 0% { background: #d32f2f; } 50% { background: #ff0000; } 100% { background: #d32f2f; } }
+        #aviso-tiebreak { width: 160px; background: #d32f2f; border-radius: 8px; border: 2px solid #f00; text-align: center; display: none; height: 65px; align-items: center; justify-content: center; }
 
         /* SCOREBOARD */
-        #scoreboard { width: 950px; background: #0a0a20; border: 4px solid #333; position: relative; border-radius: 4px; }
-        .labels-row { display: flex; background: rgba(255,255,255,0.05); font-size: 15px; color: #aaa; font-weight: bold; border-bottom: 2px solid #333; }
+        #scoreboard { width: 950px; background: #0a0a20; border: 4px solid #333; border-radius: 4px; position: relative; }
+        .labels-row { display: flex; background: rgba(255,255,255,0.05); font-size: 15px; border-bottom: 2px solid #333; }
         .label-equipo { flex-grow: 1; padding: 12px 25px; }
         .label-box { width: 95px; text-align: center; padding: 12px 0; border-left: 1px solid #333; }
-        
         .equipo-block { display: flex; border-bottom: 6px solid #444; }
-        .equipo-block:last-child { border-bottom: none; }
-        .nombres-col { flex-grow: 1; display: flex; flex-direction: column; justify-content: center; }
         .jugador-row { display: flex; height: 75px; align-items: center; }
-        .name-cell { flex-grow: 1; padding-left: 25px; font-size: 38px; font-weight: 800; text-transform: uppercase; display: flex; align-items: center; }
+        .name-cell { flex-grow: 1; padding-left: 25px; font-size: 38px; font-weight: 800; text-transform: uppercase; }
         .box { width: 95px; display: flex; justify-content: center; align-items: center; font-size: 65px; font-weight: 900; border-left: 2px solid #333; }
-        
         .pts-cell { width: 170px; display: flex; justify-content: center; align-items: center; font-size: 110px; font-weight: 900; background: #c6a052; color: #000; border-left: 2px solid #333; }
-        .pts-cell.modo-tiebreak { background: #000; color: #c6a052; }
-        
-        .bola { width: 22px; height: 22px; background: #ccff00; border-radius: 50%; margin-left: 20px; display: none; box-shadow: 0 0 15px #ccff00; }
-
-        /* BLOQUEO FINAL */
-        #fin-overlay { position: absolute; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.3); display:none; z-index:5; pointer-events: none; }
+        .bola { width: 22px; height: 22px; background: #ccff00; border-radius: 50%; margin-left: 20px; display: none; }
     </style>
 </head>
 <body>
+    <div id="cartel-final"><div class="txt-final-gigante">PARTIDO<br>FINALIZADO</div></div>
+
     <div class="brand-header">
-        <div class="logo-container"><img src="https://via.placeholder.com/180x80?text=LOGO" alt="Logo" class="logo-img"></div>
-        <div class="title-container"><h1 class="title-main">OPEN PADEL CHAMPIONS</h1><p class="title-sub">TORNEO PROFESIONAL 2026</p></div>
+        <div class="logo-container"><img src="https://via.placeholder.com/180x80?text=LOGO" class="logo-img"></div>
+        <div class="title-container"><h1 class="title-main">OPEN PADEL CHAMPIONS</h1></div>
         <div style="width: 180px;"></div>
     </div>
 
     <div class="header-status">
-        <div class="timer-tv"><span id="label-timer" class="t-lab">TIEMPO</span><span id="val-timer" class="t-val">00:00:00</span></div>
-        
-        <div id="aviso-tv-top">
-            <span class="msg-top" id="msg-tv-desc">CAMBIO DE LADO</span>
-            <span class="desc-top" id="descanso-tv-q">90</span>
-        </div>
-
-        <div id="aviso-tiebreak"><span style="font-weight:900; color:#fff; font-size:20px;">TIE-BREAK</span></div>
+        <div class="timer-tv"><span class="t-val" id="val-timer">00:00:00</span></div>
+        <div id="aviso-tv-top"><span class="msg-top" id="msg-tv-desc">CAMBIO</span><span class="desc-top" id="descanso-tv-q">90</span></div>
+        <div id="aviso-tiebreak"><span style="font-weight:900; color:#fff;">TIE-BREAK</span></div>
     </div>
     
     <div id="scoreboard">
-        <div id="fin-overlay"></div>
-        <div class="labels-row">
-            <div class="label-equipo">EQUIPOS / JUGADORES</div>
-            <div class="label-box">SET 1</div>
-            <div class="label-box">SET 2</div>
-            <div class="label-box">SET 3</div>
-            <div style="width:170px; text-align:center; padding:12px 0; border-left:1px solid #333; color:#c6a052">PUNTOS</div>
-        </div>
+        <div class="labels-row"><div class="label-equipo">JUGADORES</div><div class="label-box">SET 1</div><div class="label-box">SET 2</div><div class="label-box">SET 3</div><div style="width:170px; text-align:center;">PUNTOS</div></div>
         <div class="equipo-block">
-            <div class="nombres-col">
-                <div class="jugador-row"><div class="name-cell"><span id="n0">-</span><div id="b0" class="bola"></div></div></div>
-                <div class="jugador-row"><div class="name-cell"><span id="n1">-</span><div id="b1" class="bola"></div></div></div>
-            </div>
+            <div class="nombres-col"><div class="jugador-row"><div class="name-cell"><span id="n0">-</span><div id="b0" class="bola"></div></div></div><div class="jugador-row"><div class="name-cell"><span id="n1">-</span><div id="b1" class="bola"></div></div></div></div>
             <div class="box" id="s1-0">0</div><div class="box" id="s2-0">0</div><div class="box" id="s3-0">0</div><div class="pts-cell" id="pA">0</div>
         </div>
         <div class="equipo-block">
-            <div class="nombres-col">
-                <div class="jugador-row"><div class="name-cell"><span id="n2">-</span><div id="b2" class="bola"></div></div></div>
-                <div class="jugador-row"><div class="name-cell"><span id="n3">-</span><div id="b3" class="bola"></div></div></div>
-            </div>
+            <div class="nombres-col"><div class="jugador-row"><div class="name-cell"><span id="n2">-</span><div id="b2" class="bola"></div></div></div><div class="jugador-row"><div class="name-cell"><span id="n3">-</span><div id="b3" class="bola"></div></div></div></div>
             <div class="box" id="s1-1">0</div><div class="box" id="s2-1">0</div><div class="box" id="s3-1">0</div><div class="pts-cell" id="pB">0</div>
         </div>
     </div>
@@ -119,21 +73,17 @@
 
     db.ref("marcador/tiempos").on("value", (snap) => {
         const t = snap.val(); if(!t) return;
-        document.getElementById('label-timer').innerText = t.vPel ? "PELOTEO" : "TIEMPO PARTIDO"; 
         document.getElementById('val-timer').innerText = t.vPel ? t.tPel : t.tPar; 
-        
         const avisoTop = document.getElementById('aviso-tv-top');
         if(t.vDesc && t.tDesc > 0) { 
             avisoTop.style.display = 'flex'; 
             document.getElementById('descanso-tv-q').innerText = t.tDesc; 
-        } else if (t.tDesc > 0 && !t.vDesc) {
-            // Caso especial para el mensaje final sin segundero corriendo
+        } else if (t.modoFinal) {
             avisoTop.style.display = 'flex';
             document.getElementById('descanso-tv-q').innerText = "";
-        } else { 
-            avisoTop.style.display = 'none'; 
-        }
-        document.getElementById('aviso-tiebreak').style.display = t.tiebreak ? 'flex' : 'none';
+        } else { avisoTop.style.display = 'none'; }
+        document.getElementById('aviso-tiebreak').style.display = (t.tiebreak && !t.modoFinal) ? 'flex' : 'none';
+        document.getElementById('cartel-final').style.display = t.cartelGigante ? 'flex' : 'none';
     });
 
     db.ref("marcador/actual").on("value", (snap) => {
@@ -141,29 +91,11 @@
         document.getElementById('n0').innerText=d.n0; document.getElementById('n1').innerText=d.n1;
         document.getElementById('n2').innerText=d.n2; document.getElementById('n3').innerText=d.n3;
         document.getElementById('pA').innerText=d.p0; document.getElementById('pB').innerText=d.p1;
-        
-        const msgTv = document.getElementById('msg-tv-desc');
-        msgTv.innerText = d.msg || "CAMBIO DE LADO";
-        
-        // Si el mensaje es Partido Finalizado, aplicar flash
-        const avisoBox = document.getElementById('aviso-tv-top');
-        if(d.msg === "PARTIDO FINALIZADO") {
-            avisoBox.classList.add('flash-anim');
-            document.getElementById('fin-overlay').style.display = 'block';
-        } else {
-            avisoBox.classList.remove('flash-anim');
-            document.getElementById('fin-overlay').style.display = 'none';
-        }
-
-        const esTB = (d.modo === "TIE-BREAK");
-        document.getElementById('pA').classList.toggle('modo-tiebreak', esTB);
-        document.getElementById('pB').classList.toggle('modo-tiebreak', esTB);
-        
+        document.getElementById('msg-tv-desc').innerText = d.msg;
         [0,1,2].forEach(i => { 
             document.getElementById(`s${i+1}-0`).innerText = d.h0[i]; 
             document.getElementById(`s${i+1}-1`).innerText = d.h1[i]; 
         });
-        
         for(let i=0; i<4; i++) document.getElementById(`b${i}`).style.display = (d.sIdx===i) ? 'block' : 'none';
     });
 </script>
