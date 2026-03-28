@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>JUEZ PADEL CONTROL - V39</title>
+    <title>JUEZ PADEL CONTROL - V41</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
     <style>
@@ -25,8 +25,6 @@
         .puntos-display { font-size: 55px; font-weight: 900; color: #c6a052; margin: 5px 0; }
         .btn-punto { width: 100%; padding: 15px; background: #c6a052; border: none; border-radius: 10px; font-size: 18px; font-weight: bold; color: #000; }
         .aviso-cambio { background: #ffcc00; color: #000; padding: 20px; font-size: 22px; font-weight: 900; border-radius: 12px; position: fixed; top: 10%; left: 5%; width: 90%; z-index: 1000; display: none; border: 5px solid #fff; box-shadow: 0 0 40px rgba(0,0,0,0.8); cursor: pointer; }
-        .titileo { animation: flash-aviso 0.5s infinite alternate; }
-        @keyframes flash-aviso { from { background: #ffcc00; } to { background: #fff; } }
     </style>
 </head>
 <body onload="cargarLocal()">
@@ -84,9 +82,14 @@
     function enviarTiempos() {
         let h=Math.floor(segP/3600).toString().padStart(2,'0'), m=Math.floor((segP%3600)/60).toString().padStart(2,'0'), s=(segP%60).toString().padStart(2,'0');
         let pm=Math.floor(segPel/60).toString().padStart(2,'0'), ps=(segPel%60).toString().padStart(2,'0');
+        db.ref("marcador/tiempos").set({ 
+            tPar:`${h}:${m}:${s}`, tPel:`${pm}:${ps}`, vPel:visPel, tDesc:segDescanso, vDesc:runDescanso, 
+            tiebreak:(modo==="TIE-BREAK" && !finalizado), 
+            esSTB: (setActualIdx === 2 && modoSTB > 0),
+            cartelGigante: cartelGiganteFinal, modoFinal: finalizado 
+        });
         document.getElementById('disp-partido').innerText = `${h}:${m}:${s}`;
         document.getElementById('disp-peloteo').innerText = `${pm}:${ps}`;
-        db.ref("marcador/tiempos").set({ tPar:`${h}:${m}:${s}`, tPel:`${pm}:${ps}`, vPel:visPel, tDesc:segDescanso, vDesc:runDescanso, tiebreak:(modo==="TIE-BREAK" && !finalizado), cartelGigante: cartelGiganteFinal, modoFinal: finalizado });
     }
 
     function sumar(eq) {
@@ -129,9 +132,8 @@
 
     function cerrarPartido() {
         finalizado = true; runP = false; pts = [0,0]; cartelGiganteFinal = true;
-        document.getElementById('cambio-lado-ctrl').classList.add('titileo');
         dispararAviso("PARTIDO FINALIZADO", 0); 
-        setTimeout(() => { cartelGiganteFinal = false; document.getElementById('cambio-lado-ctrl').classList.remove('titileo'); render(); }, 15000);
+        setTimeout(() => { cartelGiganteFinal = false; render(); }, 15000);
     }
 
     function ganarS() { if(setActualIdx < 2) { setActualIdx++; modo=(setActualIdx===2 && modoSTB>0)?"TIE-BREAK":"NORMAL"; pts=[0,0]; } }
@@ -149,8 +151,8 @@
     function rotarSaqueTB() { if(saqueJugadorIdx < 2) { saqueJugadorIdx = proximoSacadorEq[1]; proximoSacadorEq[1] = (proximoSacadorEq[1] === 2) ? 3 : 2; } else { saqueJugadorIdx = proximoSacadorEq[0]; proximoSacadorEq[0] = (proximoSacadorEq[0] === 0) ? 1 : 0; } }
     function deshacer() { if(stack.length>0) { let e=JSON.parse(stack.pop()); pts=e.pts; historialSets=e.h; setActualIdx=e.sIdx; modo=e.m; saqueJugadorIdx=e.sq; proximoSacadorEq=e.pS; puntoOroActivo=e.oro; modoSTB=e.mstb; finalizado=e.f; runP=e.rP; cartelGiganteFinal = e.cg; limiteTB = e.ltb || 6; render(); } }
     function resetTotal() { if(confirm("RESET?")) { localStorage.clear(); db.ref("marcador").remove(); location.reload(); } }
-    function guardarLocal() { localStorage.setItem('padel_v39', JSON.stringify({pts, historialSets, setActualIdx, modo, modoSTB, finalizado, saqueJugadorIdx, proximoSacadorEq, segP, limiteTB, names:[document.getElementById('n0').innerText,document.getElementById('n1').innerText,document.getElementById('n2').innerText,document.getElementById('n3').innerText]})); }
-    function cargarLocal() { let b = JSON.parse(localStorage.getItem('padel_v39')); if(b) { pts=b.pts; historialSets=b.historialSets; setActualIdx=b.setActualIdx; modo=b.modo; modoSTB=b.modoSTB; finalizado=b.finalizado; saqueJugadorIdx=b.saqueJugadorIdx; proximoSacadorEq=b.proximoSacadorEq; segP=b.segP; limiteTB=b.limiteTB || 6; b.names.forEach((n,i) => document.getElementById('n'+i).innerText=n); render(); } }
+    function guardarLocal() { localStorage.setItem('padel_v41', JSON.stringify({pts, historialSets, setActualIdx, modo, modoSTB, finalizado, saqueJugadorIdx, proximoSacadorEq, segP, limiteTB, names:[document.getElementById('n0').innerText,document.getElementById('n1').innerText,document.getElementById('n2').innerText,document.getElementById('n3').innerText]})); }
+    function cargarLocal() { let b = JSON.parse(localStorage.getItem('padel_v41')); if(b) { pts=b.pts; historialSets=b.historialSets; setActualIdx=b.setActualIdx; modo=b.modo; modoSTB=b.modoSTB; finalizado=b.finalizado; saqueJugadorIdx=b.saqueJugadorIdx; proximoSacadorEq=b.proximoSacadorEq; segP=b.segP; limiteTB=b.limiteTB || 6; b.names.forEach((n,i) => document.getElementById('n'+i).innerText=n); render(); } }
 
     function render() {
         const l = ["0","15","30","40","Ad"];
